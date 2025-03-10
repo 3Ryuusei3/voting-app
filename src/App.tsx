@@ -1,34 +1,73 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
+import { useAuthStore } from './store/authStore'
+import Auth from './components/Auth'
+import { supabase } from './lib/supabase'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { user, isLoading } = useAuthStore()
+  const [initialCheckDone, setInitialCheckDone] = useState(false)
 
+  // Debug log
+  console.log('App render state:', { user, isLoading, initialCheckDone })
+
+  useEffect(() => {
+    console.log('Running initial auth check')
+
+    // Only run once
+    if (!initialCheckDone) {
+      // Check if user is already authenticated
+      useAuthStore.getState().checkUser().then(() => {
+        setInitialCheckDone(true)
+      })
+    }
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session)
+        if (event === 'SIGNED_IN' && session?.user) {
+          useAuthStore.getState().checkUser()
+        } else if (event === 'SIGNED_OUT') {
+          useAuthStore.getState().checkUser()
+        }
+      }
+    )
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [initialCheckDone]) // Only depend on initialCheckDone
+
+  // Show loading state only during initial check
+  if (isLoading && !initialCheckDone) {
+    console.log('Showing loading state')
+    return (
+      <div className="app-loading">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  // If no user, show auth page
+  if (!user) {
+    console.log('No user found, showing Auth component')
+    return <Auth />
+  }
+
+  // Main app content (only shown when authenticated)
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app">
+      <header className="app-header">
+        <h1>Voting App</h1>
+        <button onClick={() => useAuthStore.getState().signOut()}>Sign Out</button>
+      </header>
+      <main className="app-content">
+        <p>Welcome, {user.email}!</p>
+        <p>You are now authenticated. The voting app content will be added here.</p>
+      </main>
+    </div>
   )
 }
 
