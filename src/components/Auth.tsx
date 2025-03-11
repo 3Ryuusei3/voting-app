@@ -8,7 +8,7 @@ const Auth = () => {
       <div className="card" style={{ maxWidth: '400px', width: '100%' }}>
         <div className="card-body text-center">
           <p className="text-muted mb-lg">
-            Please sign in with your Google account to continue.
+            Por favor, inicia sesión con tu cuenta de Google para continuar.
           </p>
           <button
             className="btn btn-primary btn-full flex items-center justify-center"
@@ -23,7 +23,7 @@ const Auth = () => {
                 <path d="M43.611 20.083H42V20H24V28H35.303C34.511 30.237 33.072 32.166 31.216 33.571L31.219 33.57L37.409 38.808C36.971 39.205 44 34 44 24C44 22.659 43.862 21.35 43.611 20.083Z" fill="#1976D2"/>
               </svg>
             </span>
-            {isLoading ? 'Signing in...' : 'Sign in with Google'}
+            {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión con Google'}
           </button>
           {error && <p className="text-error mt-md">{error}</p>}
         </div>

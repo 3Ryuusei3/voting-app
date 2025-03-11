@@ -1,7 +1,39 @@
+import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { Link } from 'react-router-dom'
+import { getWordCounts } from '../lib/wordService'
+import WordStats from './WordStats'
 
 const AuthenticatedContent = () => {
   const { user } = useAuth()
+  const [wordCounts, setWordCounts] = useState({
+    voted: 0,
+    unvoted: 0,
+    total: 0,
+    easyWords: 0,
+    difficultWords: 0
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (user) {
+      loadWordCounts()
+    }
+  }, [user])
+
+  const loadWordCounts = async () => {
+    if (!user) return
+
+    setIsLoading(true)
+    try {
+      const counts = await getWordCounts(user.id)
+      setWordCounts(counts)
+    } catch (err) {
+      console.error('Error al cargar conteos de palabras:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   if (!user) {
     return null
@@ -10,9 +42,28 @@ const AuthenticatedContent = () => {
   return (
     <div className="card">
       <div className="card-body">
-        <h2 className="text-large font-medium">Welcome, {user.email}!</h2>
-        <p className="text-muted">You are now authenticated. The voting app content will be added here.</p>
-        <button className="btn btn-primary">Start Voting</button>
+        <h2 className="text-large font-medium">¡Bienvenido, {user.email}!</h2>
+        <p className="text-muted">En esta aplicación podrás votar por las palabras que consideres fáciles para filtrar la lista de palabras del juego <Link to="https://wo-ses.vercel.app/" className="link">Woses</Link>.</p>
+
+        <p className="text-muted mb-4">
+          En el juego se podrá elegir 2 modos con las palabras consideradas complicadas por los usuarios de Woses y las palabras que los usuarios han votado como fáciles.
+        </p>
+
+        {!isLoading && (
+          <div className="bg-blue-50 p-4 rounded-md mb-6">
+            <h4 className="mt-sm mb-sm">Has votado {wordCounts.voted} de {wordCounts.total} palabras totales.</h4>
+
+            <WordStats
+              wordCounts={wordCounts}
+              showDetailedStats={false}
+              className="mt-4"
+            />
+          </div>
+        )}
+
+        <Link to="/vote" className="btn btn-primary">
+          {wordCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
+        </Link>
       </div>
     </div>
   )

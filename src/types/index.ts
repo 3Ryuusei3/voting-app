@@ -1,0 +1,19 @@
+export interface User {
+  id: string
+  email: string
+  created_at: string
+}
+
+export interface Word {
+  id: number
+  word: string
+  created_at: string
+}
+
+export interface Vote {
+  id: number
+  user_id: string
+  word_id: number
+  difficult: boolean
+  created_at: string
+}
