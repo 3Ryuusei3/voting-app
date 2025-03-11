@@ -19,10 +19,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   signInWithGoogle: async () => {
     try {
       set({ isLoading: true, error: null });
+      let redirectUrl = window.location.origin;
+
+      if (redirectUrl.includes('localhost') || redirectUrl.includes('127.0.0.1')) {
+        redirectUrl = 'https://woting-app.vercel.app';
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: redirectUrl,
         },
       });
 
