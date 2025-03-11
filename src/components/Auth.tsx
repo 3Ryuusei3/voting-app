@@ -1,32 +1,32 @@
-import { useAuthStore } from '../store/authStore';
-import '../styles/auth.scss';
+import { useAuth } from '../hooks/useAuth';
 
 const Auth = () => {
-  const { isLoading, error, signInWithGoogle } = useAuthStore();
+  const { isLoading, error, signInWithGoogle } = useAuth();
 
   return (
-    <div className="auth">
-      <div className="auth__container">
-        <h1 className="auth__title">Welcome to Voting App</h1>
-        <p className="auth__description">
-          Please sign in with your Google account to continue.
-        </p>
-        <button
-          className="auth__button"
-          onClick={signInWithGoogle}
-          disabled={isLoading}
-        >
-          <span className="auth__button-icon">
-            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
-              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-            </svg>
-          </span>
-          {isLoading ? 'Signing in...' : 'Sign in with Google'}
-        </button>
-        {error && <p className="auth__error">{error}</p>}
+    <div className="v-section items-center justify-center p-xl">
+      <div className="card" style={{ maxWidth: '400px', width: '100%' }}>
+        <div className="card-body text-center">
+          <p className="text-muted mb-lg">
+            Please sign in with your Google account to continue.
+          </p>
+          <button
+            className="btn btn-primary btn-full flex items-center justify-center"
+            onClick={signInWithGoogle}
+            disabled={isLoading}
+          >
+            <span className="mr-sm" style={{ marginRight: '0.5rem' }}>
+              <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M43.611 20.083H42V20H24V28H35.303C33.654 32.657 29.223 36 24 36C17.373 36 12 30.627 12 24C12 17.373 17.373 12 24 12C27.059 12 29.842 13.154 31.961 15.039L37.618 9.382C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24C4 35.045 12.955 44 24 44C35.045 44 44 35.045 44 24C44 22.659 43.862 21.35 43.611 20.083Z" fill="#FFC107"/>
+                <path d="M6.306 14.691L12.877 19.51C14.655 15.108 18.961 12 24 12C27.059 12 29.842 13.154 31.961 15.039L37.618 9.382C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691Z" fill="#FF3D00"/>
+                <path d="M24 44C29.166 44 33.86 42.023 37.409 38.808L31.219 33.57C29.211 35.091 26.715 36 24 36C18.798 36 14.381 32.683 12.717 28.054L6.195 33.079C9.505 39.556 16.227 44 24 44Z" fill="#4CAF50"/>
+                <path d="M43.611 20.083H42V20H24V28H35.303C34.511 30.237 33.072 32.166 31.216 33.571L31.219 33.57L37.409 38.808C36.971 39.205 44 34 44 24C44 22.659 43.862 21.35 43.611 20.083Z" fill="#1976D2"/>
+              </svg>
+            </span>
+            {isLoading ? 'Signing in...' : 'Sign in with Google'}
+          </button>
+          {error && <p className="text-error mt-md">{error}</p>}
+        </div>
       </div>
     </div>
   );

@@ -42,9 +42,9 @@
 }
 
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .app-loading {
@@ -86,5 +86,9 @@
 }
 
 .app-content {
-  padding: 1rem 0;
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
 }
