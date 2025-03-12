@@ -17,7 +17,8 @@ const VotePage = () => {
     unvoted: 0,
     total: 0,
     easyWords: 0,
-    difficultWords: 0
+    difficultWords: 0,
+    notExistWords: 0
   })
 
   // Redirigir si el usuario no está autenticado
@@ -63,7 +64,7 @@ const VotePage = () => {
     }
   }
 
-  const handleVote = async (wordId: number, difficult: boolean) => {
+  const handleVote = async (wordId: number, difficult: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
 
     setIsLoading(true)
@@ -94,7 +95,7 @@ const VotePage = () => {
   // Si no hay palabras para votar
   if (words.length === 0 && !isLoading) {
     return (
-      <div className="container p-xl">
+      <div className="container p-lg">
         <div className="card max-w-md w-full mx-auto">
           <div className="card-body text-center">
             <h2 className="text-xl font-medium mb-4">¡Has votado todas las palabras disponibles!</h2>
@@ -117,7 +118,7 @@ const VotePage = () => {
   }
 
   return (
-    <div className="container p-xl">
+    <div className="container p-lg">
       {error && (
         <div className="alert alert-error mb-6 max-w-md mx-auto">
           <p>{error}</p>
@@ -139,6 +140,9 @@ const VotePage = () => {
                 </div>
                 <div className="flex items-center gap-sm">
                   <span className="text-small">Fáciles: {wordCounts.easyWords}</span>
+                </div>
+                <div className="flex items-center gap-sm">
+                  <span className="text-small">No existen: {wordCounts.notExistWords}</span>
                 </div>
               </div>
 

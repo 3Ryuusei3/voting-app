@@ -11,7 +11,8 @@ const AuthenticatedContent = () => {
     unvoted: 0,
     total: 0,
     easyWords: 0,
-    difficultWords: 0
+    difficultWords: 0,
+    notExistWords: 0
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -43,7 +44,7 @@ const AuthenticatedContent = () => {
     <div className="card">
       <div className="card-body">
         <h2 className="text-large font-medium">¡Bienvenido, {user.email}!</h2>
-        <p className="text-muted">En esta aplicación podrás votar por las palabras que consideres fáciles para filtrar la lista de palabras del juego <Link to="https://wo-ses.vercel.app/" className="link">Woses</Link>.</p>
+        <p className="text-muted">En esta aplicación podrás votar para filtrar la lista de palabras del juego <Link to="https://wo-ses.vercel.app/" className="link">Woses</Link>.</p>
 
         <p className="text-muted mb-4">
           En el juego se podrá elegir 2 modos con las palabras consideradas complicadas por los usuarios de Woses y las palabras que los usuarios han votado como fáciles.

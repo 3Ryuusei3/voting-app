@@ -3,11 +3,12 @@
 
 :root {
   // Colors - Dark Mode
-  --clr-primary: #6122f5;
+  --clr-primary: #6e33f9;
   --clr-secondary: #44277e;
+  --clr-tertiary: #1d0d3e;
   --clr-accent: #ffcd57;
-  --clr-success: #43f643;
-  --clr-error: #ff244c;
+  --clr-success: #43cd1c;
+  --clr-error: #e42218;
   --clr-background: #121212;
   --clr-surface: #1e1e1e;
   --clr-surface-variant: #2c2c2c;
@@ -74,6 +75,7 @@ body {
 
 a {
   text-decoration: none;
+  color: inherit;
 }
 
 // Utility Classes
@@ -180,6 +182,10 @@ a {
 // Margin utilities
 .m-0 {
   margin: 0;
+}
+
+.ml-sm {
+  margin-left: var(--space-sm);
 }
 
 .mt-xs {
@@ -309,9 +315,14 @@ a {
 }
 
 .link {
-  text-decoration: underline;
   color: var(--clr-primary);
-  font-weight: var(--fw-bold);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--clr-accent);
+    text-decoration: underline;
+  }
 }
 
 // Button utilities
@@ -324,7 +335,7 @@ a {
   font-size: var(--fs-medium);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  border: none;
+  border: 1px solid var(--clr-border);
   transition: all 0.2s ease;
   text-decoration: none;
 
@@ -345,6 +356,15 @@ a {
 
 .btn-secondary {
   background-color: var(--clr-secondary);
+  color: var(--clr-text);
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.btn-tertiary {
+  background-color: var(--clr-tertiary);
   color: var(--clr-text);
 
   &:hover {
@@ -399,13 +419,14 @@ a {
 }
 
 .btn-sm {
-  padding: var(--space-xs) var(--space-sm);
-  font-size: var(--fs-small);
+  padding: var(--space-sm) var(--space-sm);
+  font-size: var(--fs-medium);
 }
 
 .btn-lg {
   padding: var(--space-md) var(--space-lg);
   font-size: var(--fs-large);
+  font-weight: var(--fw-bold);
 }
 
 .btn-full {
@@ -445,6 +466,45 @@ a {
 .card-footer {
   padding: var(--space-md) var(--space-lg);
   border-top: 1px solid var(--clr-border);
+}
+
+.card-info {
+  text-align: left;
+  background-color: var(--clr-surface-variant);
+  padding: var(--space-md);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+
+  ol {
+    padding-left: var(--space-lg);
+
+    li {
+      margin-bottom: var(--space-md);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      p {
+        line-height: 1.5;
+
+        &:first-child {
+          font-weight: var(--fw-medium);
+          color: var(--clr-text);
+        }
+
+        em {
+          color: var(--clr-accent);
+          font-style: italic;
+          font-weight: var(--fw-regular);
+          display: block;
+          margin-top: var(--space-xs);
+          padding-left: var(--space-md);
+          border-left: 2px solid var(--clr-accent);
+        }
+      }
+    }
+  }
 }
 
 // Section utilities
@@ -608,4 +668,18 @@ a {
     background-color: var(--clr-error);
     color: var(--clr-text);
   }
+}
+
+// Spinner animation
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--clr-border);
+  border-top-color: var(--clr-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }

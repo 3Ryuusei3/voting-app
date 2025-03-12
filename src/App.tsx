@@ -3,7 +3,7 @@ import { useAuth } from './hooks/useAuth'
 import Auth from './components/Auth'
 import Header from './components/Header'
 import AuthProvider from './context/AuthProvider'
-import AuthenticatedContent from './components/AuthenticatedContent'
+import AuthenticatedContent from './components/WelcomeCard'
 import VotePage from './pages/VotePage'
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
           <Routes>
             <Route path="/vote" element={<VotePage />} />
             <Route path="/" element={
-              <main className="container p-xl">
+              <main className="container p-lg">
                 {!user ? <Auth /> : <AuthenticatedContent />}
               </main>
             } />

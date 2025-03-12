@@ -14,6 +14,6 @@ export interface Vote {
   id: number
   user_id: string
   word_id: number
-  difficult: boolean
+  difficult: 'easy' | 'difficult' | 'not_exist'
   created_at: string
 }

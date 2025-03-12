@@ -5,6 +5,7 @@ interface WordStatsProps {
     total: number
     easyWords: number
     difficultWords: number
+    notExistWords: number
   }
   showDetailedStats?: boolean
   className?: string
@@ -49,6 +50,7 @@ const WordStats = ({
           <p>Has votado {wordCounts.voted} de {wordCounts.total} palabras totales.</p>
           <p>Palabras difíciles: {wordCounts.difficultWords}</p>
           <p>Palabras fáciles: {wordCounts.easyWords}</p>
+          <p>Palabras que no existen: {wordCounts.notExistWords}</p>
         </div>
       )}
     </div>

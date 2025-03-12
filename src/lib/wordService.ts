@@ -51,7 +51,8 @@ export async function getWordCounts(userId: string): Promise<{
   unvoted: number,
   total: number,
   easyWords: number,
-  difficultWords: number
+  difficultWords: number,
+  notExistWords: number
 }> {
   try {
     // Obtener conteo de palabras votadas
@@ -67,7 +68,7 @@ export async function getWordCounts(userId: string): Promise<{
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('difficult', false)
+      .eq('difficult', 'easy')
 
     if (easyError) throw easyError
 
@@ -76,9 +77,18 @@ export async function getWordCounts(userId: string): Promise<{
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('difficult', true)
+      .eq('difficult', 'difficult')
 
     if (difficultError) throw difficultError
+
+    // Obtener conteo de palabras marcadas como no existentes
+    const { count: notExistCount, error: notExistError } = await supabase
+      .from('votes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('difficult', 'not_exist')
+
+    if (notExistError) throw notExistError
 
     // Obtener conteo total de palabras
     const { count: totalCount, error: totalError } = await supabase
@@ -92,6 +102,7 @@ export async function getWordCounts(userId: string): Promise<{
     const safeTotalCount = totalCount || 0
     const safeEasyCount = easyCount || 0
     const safeDifficultCount = difficultCount || 0
+    const safeNotExistCount = notExistCount || 0
     const unvotedCount = safeTotalCount - safeVotedCount
 
     return {
@@ -99,7 +110,8 @@ export async function getWordCounts(userId: string): Promise<{
       unvoted: unvotedCount,
       total: safeTotalCount,
       easyWords: safeEasyCount,
-      difficultWords: safeDifficultCount
+      difficultWords: safeDifficultCount,
+      notExistWords: safeNotExistCount
     }
   } catch (error) {
     console.error('Error al obtener conteos de palabras:', error)
@@ -110,7 +122,7 @@ export async function getWordCounts(userId: string): Promise<{
 /**
  * Registra un voto del usuario
  */
-export async function submitVote(userId: string, wordId: number,difficult: boolean): Promise<Vote> {
+export async function submitVote(userId: string, wordId: number, difficult: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
   // Verificar si el usuario ya ha votado esta palabra
   const { data: existingVote } = await supabase
     .from('votes')

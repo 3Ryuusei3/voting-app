@@ -20,7 +20,7 @@ const Header = () => {
         </div>
 
         <button
-          className={`btn ${user ? 'btn-accent' : 'btn-primary'}`}
+          className={`btn btn-sm ${user ? 'btn-accent' : 'btn-primary'}`}
           onClick={handleAuth}
           disabled={isLoading}
         >
