@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Auth = () => {
@@ -7,7 +8,9 @@ const Auth = () => {
     <div className="v-section items-center justify-center p-xl">
       <div className="card" style={{ maxWidth: '400px', width: '100%' }}>
         <div className="card-body text-center">
-          <p className="text-muted mb-lg">
+          <h2 className="text-large font-medium">¡Bienvenido a Woting!</h2>
+          <p className="text-muted">En esta aplicación podrás votar para filtrar la lista de palabras del juego <Link to="https://wo-ses.vercel.app/" className="link">WOS-ES</Link>.</p>
+          <p className="text-muted mb-xs">
             Por favor, inicia sesión con tu cuenta de Google para continuar.
           </p>
           <button
