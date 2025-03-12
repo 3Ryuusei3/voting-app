@@ -82,6 +82,7 @@ a {
 
 // Layout
 .container {
+  position: relative;
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
@@ -91,6 +92,26 @@ a {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+}
+
+@media (max-width: 576px) {
+  .container > div {
+    margin-bottom: 20vh;
+  }
+  .button-group {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-sm);
+    background-color: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+
+    div {
+      flex-direction: row !important;
+    }
+
+  }
 }
 
 .w-100 {

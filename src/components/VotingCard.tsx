@@ -30,21 +30,17 @@ const VotingCard = ({ word, onVote, isLoading }: VotingCardProps) => {
         <h2 className="text-2xl font-bold mb-6">
           <Link to={`https://dle.rae.es/${word.word}`} target="_blank">{word.word.toUpperCase()}</Link>
         </h2>
-
-        {(isLoading || localLoading) ? (
-          <div className="flex justify-center gap-sm">
-            <button className="btn btn-primary w-100" disabled style={{ minHeight: '190px' }}>CARGANDO...</button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-sm">
-            <div className="flex flex-col justify-center gap-sm">
-              <button
-                className="btn btn-lg btn-tertiary w-100"
-                onClick={() => handleVote('not_exist')}
-                disabled={isLoading || localLoading}
-              >
-                NO EXISTE
-              </button>
+        <p className="text-muted">Indica la dificultad de la palabra. Puedes pulsar sobre la palabra para ver su significado en el diccionario.</p>
+        <div className="flex flex-col gap-sm">
+          <button
+            className="btn btn-lg btn-tertiary w-100"
+            onClick={() => handleVote('not_exist')}
+            disabled={isLoading || localLoading}
+          >
+            NO EXISTE
+          </button>
+          <div className="button-group flex flex-col justify-center gap-sm">
+            <div className="flex flex-col gap-sm">
               <button
                 className="btn btn-lg btn-error w-100"
                 onClick={() => handleVote('difficult')}
@@ -61,7 +57,7 @@ const VotingCard = ({ word, onVote, isLoading }: VotingCardProps) => {
               </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
