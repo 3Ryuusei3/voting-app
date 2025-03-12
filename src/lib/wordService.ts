@@ -11,14 +11,12 @@ export async function getUnvotedWords(userId: string, limit = 10): Promise<Word[
       .from('words')
       .select('*')
       .order('created_at')
-      .limit(500) // Limitamos a 500 para no sobrecargar
 
     if (wordsError) {
       console.error('Error al obtener palabras:', wordsError)
       throw wordsError
     }
 
-    // Obtener palabras ya votadas
     const { data: votedWords, error: votedError } = await supabase
       .from('votes')
       .select('word_id')
@@ -29,13 +27,9 @@ export async function getUnvotedWords(userId: string, limit = 10): Promise<Word[
       throw votedError
     }
 
-    // Crear un Set de IDs votados para búsqueda eficiente
     const votedIdsSet = new Set((votedWords || []).map(v => v.word_id))
-
-    // Filtrar palabras no votadas en el cliente
     const unvotedWords = (allWords || []).filter(word => !votedIdsSet.has(word.id))
 
-    // Devolver solo la cantidad solicitada
     return unvotedWords.slice(0, limit)
   } catch (err) {
     console.error('Error en getUnvotedWords:', err)
