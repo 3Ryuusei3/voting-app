@@ -99,18 +99,26 @@ a {
     margin-bottom: 20vh;
   }
   .button-group {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    padding: var(--space-sm);
+    padding: var(--space-md);
     background-color: var(--clr-surface);
-    border: 1px solid var(--clr-border);
+    border-top: 1px solid var(--clr-border);
+    z-index: 10;
+    box-shadow: var(--shadow-md);
 
     div {
       flex-direction: row !important;
+      width: 100%;
+      justify-content: space-between;
     }
 
+    button {
+      flex: 1;
+      margin: 0 var(--space-xs);
+    }
   }
 }
 

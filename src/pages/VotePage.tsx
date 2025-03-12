@@ -54,8 +54,13 @@ const VotePage = () => {
     setError(null)
 
     try {
-      const unvotedWords = await getUnvotedWords(user.id, 100)
+      const unvotedWords = await getUnvotedWords(user.id, 500)
       setWords(unvotedWords)
+
+      // If we didn't get any words, show a message
+      if (unvotedWords.length === 0) {
+        setError('No hay más palabras disponibles para votar en este momento. Es posible que hayas votado todas las palabras disponibles o que estemos experimentando problemas técnicos.')
+      }
     } catch (err) {
       setError('Error al cargar palabras. Por favor, intenta de nuevo.')
       console.error('Error al cargar palabras:', err)

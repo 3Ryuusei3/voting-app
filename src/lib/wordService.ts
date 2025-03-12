@@ -6,29 +6,79 @@ import type { Word, Vote } from '../types'
  */
 export async function getUnvotedWords(userId: string, limit = 10): Promise<Word[]> {
   try {
-    // Obtener todas las palabras
-    const { data: allWords, error: wordsError } = await supabase
-      .from('words')
-      .select('*')
-      .order('created_at')
+    // First, check if we can get the total count of words the user has voted on
+    const { count: votedCount, error: countError } = await supabase
+      .from('votes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
 
-    if (wordsError) {
-      console.error('Error al obtener palabras:', wordsError)
-      throw wordsError
+    if (countError) {
+      console.error('Error al obtener conteo de votos:', countError)
+      throw countError
     }
 
+    // If the user hasn't voted on any words yet, just get the first batch of words
+    if (!votedCount || votedCount === 0) {
+      const { data: words, error: wordsError } = await supabase
+        .from('words')
+        .select('*')
+        .order('created_at')
+        .limit(limit)
+
+      if (wordsError) {
+        console.error('Error al obtener palabras:', wordsError)
+        throw wordsError
+      }
+
+      return words || []
+    }
+
+    // Instead of getting all voted words at once, we'll use a more efficient approach
+    // We'll get a random sample of words and filter out the ones the user has already voted on
+
+    // Get a random sample of words (5x the limit to ensure we have enough after filtering)
+    // Use a random offset to get different words each time
+    const totalWords = await getTotalWordCount();
+    const randomOffset = Math.floor(Math.random() * Math.max(1, totalWords - (limit * 5)));
+
+    const { data: randomWords, error: randomError } = await supabase
+      .from('words')
+      .select('*')
+      .range(randomOffset, randomOffset + (limit * 5) - 1)
+
+    if (randomError) {
+      console.error('Error al obtener palabras aleatorias:', randomError)
+      throw randomError
+    }
+
+    if (!randomWords || randomWords.length === 0) {
+      return []
+    }
+
+    // Get the IDs of these random words
+    const randomWordIds = randomWords.map(word => word.id)
+
+    // Check which of these random words the user has already voted on
     const { data: votedWords, error: votedError } = await supabase
       .from('votes')
       .select('word_id')
       .eq('user_id', userId)
+      .in('word_id', randomWordIds) // Only check the random words we fetched
 
     if (votedError) {
-      console.error('Error al obtener votos:', votedError)
+      console.error('Error al obtener palabras votadas:', votedError)
       throw votedError
     }
 
+    // Filter out words the user has already voted on
     const votedIdsSet = new Set((votedWords || []).map(v => v.word_id))
-    const unvotedWords = (allWords || []).filter(word => !votedIdsSet.has(word.id))
+    const unvotedWords = randomWords.filter(word => !votedIdsSet.has(word.id))
+
+    // If we don't have enough words after filtering, try again with a different batch
+    if (unvotedWords.length < Math.min(limit, 5) && randomWords.length >= limit * 2) {
+      // Recursive call to try again with different random words
+      return getUnvotedWords(userId, limit)
+    }
 
     return unvotedWords.slice(0, limit)
   } catch (err) {
@@ -149,4 +199,20 @@ export async function submitVote(userId: string, wordId: number, difficult: 'eas
   }
 
   return data
+}
+
+/**
+ * Helper function to get the total count of words in the database
+ */
+async function getTotalWordCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('words')
+    .select('*', { count: 'exact', head: true })
+
+  if (error) {
+    console.error('Error al obtener conteo total de palabras:', error)
+    return 30000 // Fallback to a reasonable default
+  }
+
+  return count || 30000
 }
