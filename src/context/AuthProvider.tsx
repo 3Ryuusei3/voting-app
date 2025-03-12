@@ -8,8 +8,9 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { isLoading } = useAuth()
+  const { isCheckingUser } = useAuth()
   const [initialCheckDone, setInitialCheckDone] = useState(false)
+  const [lastAuthEvent, setLastAuthEvent] = useState<string | null>(null)
 
   useEffect(() => {
     if (!initialCheckDone) {
@@ -20,6 +21,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (event === lastAuthEvent && event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') {
+          return;
+        }
+
+        setLastAuthEvent(event);
+
         if (event === 'SIGNED_IN' && session?.user) {
           useAuthStore.getState().checkUser()
         } else if (event === 'SIGNED_OUT') {
@@ -31,9 +38,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [initialCheckDone])
+  }, [initialCheckDone, lastAuthEvent])
 
-  if (isLoading && !initialCheckDone) {
+  if (isCheckingUser && !initialCheckDone) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: '100vh' }}>
         <p className="text-muted text-large">Loading...</p>

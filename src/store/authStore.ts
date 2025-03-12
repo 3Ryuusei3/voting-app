@@ -5,15 +5,17 @@ import type { User } from '@supabase/supabase-js';
 interface AuthState {
   user: User | null;
   isLoading: boolean;
+  isCheckingUser: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   checkUser: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: false,
+  isCheckingUser: false,
   error: null,
 
   signInWithGoogle: async () => {
@@ -48,13 +50,27 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkUser: async () => {
+    if (get().isCheckingUser) return;
+
     try {
-      set({ isLoading: true, error: null });
+      set({ isCheckingUser: true, error: null });
       const { data } = await supabase.auth.getUser();
-      set({ user: data.user, isLoading: false });
+
+      const currentUser = get().user;
+      const newUser = data.user;
+
+      if (
+        (currentUser === null && newUser !== null) ||
+        (currentUser !== null && newUser === null) ||
+        (currentUser?.id !== newUser?.id)
+      ) {
+        set({ user: newUser });
+      }
     } catch (error) {
       console.error('Auth error:', error);
-      set({ error: (error as Error).message, isLoading: false, user: null });
+      set({ error: (error as Error).message, user: null });
+    } finally {
+      set({ isCheckingUser: false });
     }
   },
 }));

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import VotingCard from '../components/VotingCard'
@@ -7,7 +7,7 @@ import { getUnvotedWords, submitVote, getWordCounts } from '../lib/wordService'
 import type { Word } from '../types'
 
 const VotePage = () => {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isCheckingUser } = useAuth()
   const navigate = useNavigate()
   const [words, setWords] = useState<Word[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -20,23 +20,16 @@ const VotePage = () => {
     difficultWords: 0,
     notExistWords: 0
   })
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   // Redirigir si el usuario no está autenticado
   useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
+    if (!isAuthenticated && !isCheckingUser && !isLoading && dataLoaded) {
       navigate('/')
     }
-  }, [isAuthenticated, navigate, isLoading])
+  }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded])
 
-  // Cargar palabras no votadas y conteos
-  useEffect(() => {
-    if (user) {
-      loadWords()
-      loadWordCounts()
-    }
-  }, [user])
-
-  const loadWordCounts = async () => {
+  const loadWordCounts = useCallback(async () => {
     if (!user) return
 
     try {
@@ -45,9 +38,9 @@ const VotePage = () => {
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
     }
-  }
+  }, [user])
 
-  const loadWords = async () => {
+  const loadWords = useCallback(async () => {
     if (!user) return
 
     setIsLoading(true)
@@ -66,8 +59,17 @@ const VotePage = () => {
       console.error('Error al cargar palabras:', err)
     } finally {
       setIsLoading(false)
+      setDataLoaded(true)
     }
-  }
+  }, [user])
+
+  // Cargar palabras no votadas y conteos
+  useEffect(() => {
+    if (user && !dataLoaded) {
+      loadWords()
+      loadWordCounts()
+    }
+  }, [user, dataLoaded, loadWords, loadWordCounts])
 
   const handleVote = async (wordId: number, difficult: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
@@ -98,7 +100,7 @@ const VotePage = () => {
   }
 
   // Si no hay palabras para votar
-  if (words.length === 0 && !isLoading) {
+  if (words.length === 0 && !isLoading && dataLoaded) {
     return (
       <div className="container p-xl">
         <div className="card max-w-md w-full mx-auto">
