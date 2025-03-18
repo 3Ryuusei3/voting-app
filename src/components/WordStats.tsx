@@ -16,14 +16,12 @@ const WordStats = ({
   showDetailedStats = true,
   className = ''
 }: WordStatsProps) => {
-  // Calculate progress percentage
   const totalProgressPercentage = wordCounts.total > 0
     ? Math.ceil((wordCounts.voted / wordCounts.total) * 100)
     : 0
 
   return (
     <div className={className}>
-      {/* Total progress */}
       <div className="mb-4">
         {showDetailedStats && <p className="text-left mb-1">Progreso total:</p>}
         <div className="progress-container">
@@ -37,12 +35,12 @@ const WordStats = ({
             {totalProgressPercentage > 5 && `${totalProgressPercentage}%`}
           </div>
         </div>
-        {totalProgressPercentage <= 5 && (
           <div className="text-small mt-sm flex justify-between">
-            <p>{totalProgressPercentage}%</p>
-            <p>{wordCounts.voted} de {wordCounts.total}</p>
+            {totalProgressPercentage <= 5 && (
+              <p>{totalProgressPercentage}%</p>
+            )}
+            <p className="ml-auto">{wordCounts.voted} de {wordCounts.total} palabras</p>
           </div>
-        )}
       </div>
 
       {showDetailedStats && (
