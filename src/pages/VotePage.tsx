@@ -170,7 +170,7 @@ const VotePage = () => {
   // Si no hay palabras para votar
   if (words.length === 0 && !isLoading && dataLoaded) {
     return (
-      <div className="container p-xl">
+      <div className="container">
         <div className="card max-w-md w-full mx-auto">
           <div className="card-body text-center">
             <h2 className="text-xl font-medium mb-4">¡Has votado todas las palabras disponibles!</h2>
@@ -192,7 +192,7 @@ const VotePage = () => {
   }
 
   return (
-    <div className="container p-xl">
+    <div className="container">
       {error && (
         <div className="alert alert-error mb-6 max-w-md mx-auto">
           <p>{error}</p>

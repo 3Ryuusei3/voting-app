@@ -20,6 +20,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithGoogle: async () => {
     try {
+      console.log('Starting Google sign in')
       set({ isLoading: true, error: null });
       const redirectUrl = window.location.origin;
 
@@ -32,17 +33,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (error) throw error;
     } catch (error) {
+      console.error('Google sign in error:', error);
       set({ error: (error as Error).message, isLoading: false });
     }
   },
 
   signOut: async () => {
     try {
+      console.log('Starting sign out')
       set({ isLoading: true, error: null });
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       set({ user: null });
     } catch (error) {
+      console.error('Sign out error:', error);
       set({ error: (error as Error).message });
     } finally {
       set({ isLoading: false });
@@ -50,26 +54,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkUser: async () => {
-    if (get().isCheckingUser) return;
+    if (get().isCheckingUser) {
+      console.log('Already checking user, skipping')
+      return;
+    }
 
     try {
+      console.log('Starting user check')
       set({ isCheckingUser: true, error: null });
       const { data } = await supabase.auth.getUser();
 
       const currentUser = get().user;
       const newUser = data.user;
 
+      console.log('User check result:', { currentUser, newUser });
+
       if (
         (currentUser === null && newUser !== null) ||
         (currentUser !== null && newUser === null) ||
         (currentUser?.id !== newUser?.id)
       ) {
+        console.log('Updating user state')
         set({ user: newUser });
       }
     } catch (error) {
       console.error('Auth error:', error);
       set({ error: (error as Error).message, user: null });
     } finally {
+      console.log('Finishing user check')
       set({ isCheckingUser: false });
     }
   },

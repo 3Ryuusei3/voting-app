@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { VoteHistory, Word } from '../types'
 import undoIcon from '../assets/undo-icon.svg'
-
 interface VotingCardProps {
   word: Word
   onVote: (wordId: number, difficult: 'easy' | 'difficult' | 'not_exist') => Promise<void>
@@ -37,7 +36,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
   }
 
   return (
-    <div className="card">
+    <div className="card card__voting">
       {voteHistory && voteHistory.length > 0 && (
         <div className="undo-btn mb-6 max-w-md mx-auto">
           <button
@@ -45,7 +44,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
             onClick={handleUndo}
             disabled={isLoading}
           >
-            <img src={undoIcon} alt="Undo" width={24} height={24} />
+            <img src={undoIcon} alt="Undo" width={26} height={26} />
           </button>
         </div>
       )}
@@ -54,7 +53,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
           <Link to={`https://dle.rae.es/${word.word}`} target="_blank">{word.word.toUpperCase()}</Link>
         </h2>
         <p className="text-muted">Indica la dificultad de la palabra. Puedes pulsar sobre la palabra para ver su significado en el diccionario.</p>
-        <div className="flex flex-col gap-sm">
+        <div className="flex flex-col gap-xs">
           <button
             className={`btn btn-lg btn-tertiary w-100 ${checkPreviousVote('not_exist') ? 'prev-vote' : ''}`}
             onClick={() => handleVote('not_exist')}
@@ -62,7 +61,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
           >
             NO EXISTE
           </button>
-          <div className="button-group flex flex-col justify-center gap-sm">
+          <div className="button-group flex flex-col justify-center gap-xs">
             <div className="flex flex-col gap-sm">
               <button
                 className={`btn btn-lg btn-error w-100 ${checkPreviousVote('difficult') ? 'prev-vote' : ''}`}

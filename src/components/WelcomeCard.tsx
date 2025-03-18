@@ -51,7 +51,7 @@ const AuthenticatedContent = () => {
 
         {!isLoading && (
           <div className="bg-blue-50 p-4 rounded-md mb-6">
-            <h4 className="mt-sm mb-sm">Has votado {wordCounts.voted} de {wordCounts.total} palabras totales.</h4>
+            <h4 className="mt-sm mb-sm">Progreso</h4>
 
             <WordStats
               wordCounts={wordCounts}
@@ -61,9 +61,15 @@ const AuthenticatedContent = () => {
           </div>
         )}
 
-        <Link to="/vote" className="btn btn-primary">
-          {wordCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
-        </Link>
+        <div className="flex gap-sm bp-sm">
+          <Link to="/history" className="btn btn-secondary   w-100">
+            Ver historial de votos
+          </Link>
+          <Link to="/vote" className="btn btn-primary w-100">
+            {wordCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
+          </Link>
+        </div>
+        <p className="text-muted text-small text-right">© Manuel Atance 2025</p>
       </div>
     </div>
   )
