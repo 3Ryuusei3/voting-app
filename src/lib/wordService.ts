@@ -202,6 +202,26 @@ export async function submitVote(userId: string, wordId: number, difficult: 'eas
 }
 
 /**
+ * Actualiza un voto existente
+ */
+export async function updateVote(userId: string, wordId: number, difficult: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
+  const { data, error } = await supabase
+    .from('votes')
+    .update({ difficult })
+    .eq('user_id', userId)
+    .eq('word_id', wordId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error al actualizar voto:', error)
+    throw error
+  }
+
+  return data
+}
+
+/**
  * Helper function to get the total count of words in the database
  */
 async function getTotalWordCount(): Promise<number> {

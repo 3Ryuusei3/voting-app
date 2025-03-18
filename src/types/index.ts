@@ -17,3 +17,7 @@ export interface Vote {
   difficult: 'easy' | 'difficult' | 'not_exist'
   created_at: string
 }
+
+export interface VoteHistory extends Word {
+  difficulty: 'easy' | 'difficult' | 'not_exist'
+}

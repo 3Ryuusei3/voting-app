@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import VotingCard from '../components/VotingCard'
 import WordStats from '../components/WordStats'
-import { getUnvotedWords, submitVote, getWordCounts } from '../lib/wordService'
-import type { Word } from '../types'
+import { getUnvotedWords, submitVote, getWordCounts, updateVote } from '../lib/wordService'
+import type { VoteHistory, Word } from '../types'
 
 const VotePage = () => {
   const { user, isAuthenticated, isCheckingUser } = useAuth()
@@ -21,6 +21,8 @@ const VotePage = () => {
     notExistWords: 0
   })
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [voteHistory, setVoteHistory] = useState<VoteHistory[]>([])
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
 
   // Redirigir si el usuario no está autenticado
   useEffect(() => {
@@ -78,22 +80,88 @@ const VotePage = () => {
     setError(null)
 
     try {
-      await submitVote(user.id, wordId, difficult)
+      const word = words.find(w => w.id === wordId)
+      if (!word) throw new Error('Word not found')
 
-      // Eliminar la palabra votada de la lista local
-      setWords(prevWords => prevWords.filter(word => word.id !== wordId))
+      // Add to history before submitting vote
+      setVoteHistory(prev => [...prev, { ...word, difficulty: difficult }])
+
+      await submitVote(user.id, wordId, difficult)
 
       // Actualizar conteos
       await loadWordCounts()
 
-      // Si no quedan palabras, cargar más
-      if (words.length <= 1) {
+      // Pasar a la siguiente palabra
+      setCurrentWordIndex(prev => prev + 1)
+
+      // Si llegamos al final del array, cargar más palabras
+      if (currentWordIndex >= words.length - 1) {
         await loadWords()
+        setCurrentWordIndex(0)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al registrar el voto'
       setError(errorMessage)
       console.error('Error al votar:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleUndo = async () => {
+    if (!user || voteHistory.length === 0) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Volver a la palabra anterior sin modificar el historial
+      setCurrentWordIndex(prev => Math.max(0, prev - 1))
+
+      // Update counts
+      await loadWordCounts()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al deshacer el voto'
+      setError(errorMessage)
+      console.error('Error al deshacer voto:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleUpdateVote = async (wordId: number, newDifficulty: 'easy' | 'difficult' | 'not_exist') => {
+    if (!user) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await updateVote(user.id, wordId, newDifficulty)
+
+      // Update the vote in history
+      setVoteHistory(prev =>
+        prev.map(vote =>
+          vote.id === wordId
+            ? { ...vote, difficulty: newDifficulty }
+            : vote
+        )
+      )
+
+      // Update counts
+      await loadWordCounts()
+
+      // Pasar a la siguiente palabra
+      setCurrentWordIndex(prev => prev + 1)
+
+      // Si llegamos al final del array, cargar más palabras
+      if (currentWordIndex >= words.length - 1) {
+        await loadWords()
+        setCurrentWordIndex(0)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el voto'
+      setError(errorMessage)
+      console.error('Error al actualizar voto:', err)
     } finally {
       setIsLoading(false)
     }
@@ -134,9 +202,12 @@ const VotePage = () => {
       {words.length > 0 && (
         <div className="flex flex-col align-center gap-md w-100">
           <VotingCard
-            word={words[0]}
+            word={words[currentWordIndex]}
             onVote={handleVote}
             isLoading={isLoading}
+            voteHistory={voteHistory}
+            onUpdateVote={handleUpdateVote}
+            handleUndo={handleUndo}
           />
           <div className="text-center mb-4 w-100 mw-500">
             <div className="mx-auto mb-4">

@@ -7,14 +7,18 @@
   --clr-secondary: #44277e;
   --clr-tertiary: #1d0d3e;
   --clr-accent: #ffcd57;
-  --clr-success: #43cd1c;
+  --clr-accent-dark: #e6b84d;
+  --clr-success: #2bc933;
+  --clr-success-dark: #1fb927;
   --clr-error: #e42218;
+  --clr-error-dark: #ca201a;
   --clr-background: #121212;
   --clr-surface: #1e1e1e;
   --clr-surface-variant: #2c2c2c;
   --clr-text: #e0e0e0;
   --clr-text-secondary: #a0a0a0;
   --clr-border: #333333;
+  --clr-white: #ffffff;
 
   // Shadows
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -369,8 +373,14 @@ a {
   text-decoration: none;
 
   &:disabled {
+    background: var(--clr-surface-variant) !important;
+    border: 1px solid var(--clr-border) !important;
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  &.prev-vote {
+    border: 1px solid var(--clr-white);
   }
 }
 
@@ -399,6 +409,16 @@ a {
   &:hover {
     filter: brightness(1.1);
   }
+
+  &.prev-vote {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--clr-secondary),
+      var(--clr-secondary) 10px,
+      var(--clr-tertiary) 10px,
+      var(--clr-tertiary) 20px
+    );
+  }
 }
 
 .btn-success {
@@ -408,6 +428,16 @@ a {
   &:hover {
     filter: brightness(1.1);
   }
+
+  &.prev-vote {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--clr-success-dark),
+      var(--clr-success-dark) 10px,
+      var(--clr-success) 10px,
+      var(--clr-success) 20px
+    );
+  }
 }
 
 .btn-error {
@@ -416,6 +446,16 @@ a {
 
   &:hover {
     filter: brightness(1.1);
+  }
+
+  &.prev-vote {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--clr-error-dark),
+      var(--clr-error-dark) 10px,
+      var(--clr-error) 10px,
+      var(--clr-error) 20px
+    );
   }
 }
 
@@ -471,13 +511,13 @@ a {
 
 // Card utilities
 .card {
+  position: relative;
   width: 100%;
   max-width: 500px;
   background-color: var(--clr-surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--clr-border);
-  overflow: hidden;
 }
 
 .card-body {
@@ -533,6 +573,26 @@ a {
         }
       }
     }
+  }
+}
+
+.undo-btn {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  z-index: 100;
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--clr-surface);
+    border: none;
+    border: 2px solid var(--clr-border);
+    border-radius: 50%;
+    cursor: pointer;
   }
 }
 
