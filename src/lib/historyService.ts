@@ -100,6 +100,13 @@ export async function getVoteHistory(
   }
 }
 
+interface UnvotedWordResult {
+  id: number
+  word: string
+  total: number
+  created_at: string
+}
+
 /**
  * Obtiene palabras que el usuario aún no ha votado
  */
@@ -113,116 +120,36 @@ export async function getUnvotedWords(
   total: number
 }> {
   try {
-    // Build the base query for words
-    let query = supabase
-      .from('words')
-      .select('*')
+    const { data, error } = await supabase
+      .rpc('get_unvoted_words', {
+        p_user_id: userId,
+        p_search_query: searchQuery,
+        p_page: page,
+        p_page_size: pageSize
+      }) as { data: UnvotedWordResult[] | null, error: Error | null }
 
-    // Apply search filter if provided
-    if (searchQuery) {
-      query = query.ilike('word', `%${searchQuery}%`)
+    if (error) {
+      console.error('Error al obtener palabras no votadas:', error)
+      throw error
     }
 
-    // Get total count of words matching the search
-    const { count: totalCount, error: countError } = await supabase
-      .from('words')
-      .select('*', { count: 'exact', head: true })
-      .ilike('word', `%${searchQuery}%`)
-
-    if (countError) {
-      console.error('Error al obtener conteo total de palabras:', countError)
-      throw countError
-    }
-
-    // Get total count of voted words matching the search
-    let votedQuery = supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-
-    if (searchQuery) {
-      // Get word IDs that match the search
-      const { data: matchingWords, error: wordError } = await supabase
-        .from('words')
-        .select('id')
-        .ilike('word', `%${searchQuery}%`)
-
-      if (wordError) throw wordError
-
-      if (matchingWords && matchingWords.length > 0) {
-        const wordIds = matchingWords.map(w => w.id)
-        votedQuery = votedQuery.in('word_id', wordIds)
-      } else {
-        return { words: [], total: 0 }
-      }
-    }
-
-    const { count: votedCount, error: votedError } = await votedQuery
-
-    if (votedError) {
-      console.error('Error al obtener conteo de votos:', votedError)
-      throw votedError
-    }
-
-    // Calculate total unvoted words
-    const totalUnvoted = (totalCount || 0) - (votedCount || 0)
-
-    // If no unvoted words, return empty result
-    if (totalUnvoted <= 0) {
+    if (!data || data.length === 0) {
       return { words: [], total: 0 }
     }
 
-    // Get a random offset to get different words each time
-    const maxOffset = Math.max(0, totalUnvoted - (pageSize * 5))
-    const randomOffset = Math.floor(Math.random() * maxOffset)
+    // El total viene en el primer registro
+    const total = data[0].total || 0
 
-    // Get a batch of words
-    const { data: randomWords, error: wordsError } = await query
-      .order('word', { ascending: true })
-      .range(randomOffset, randomOffset + (pageSize * 5) - 1)
-
-    if (wordsError) {
-      console.error('Error al obtener palabras aleatorias:', wordsError)
-      throw wordsError
-    }
-
-    if (!randomWords || randomWords.length === 0) {
-      return { words: [], total: 0 }
-    }
-
-    // Get the IDs of these random words
-    const randomWordIds = randomWords.map(word => word.id)
-
-    // Check which of these random words the user has already voted on
-    const { data: votedWords, error: votedCheckError } = await supabase
-      .from('votes')
-      .select('word_id')
-      .eq('user_id', userId)
-      .in('word_id', randomWordIds)
-
-    if (votedCheckError) {
-      console.error('Error al obtener palabras votadas:', votedCheckError)
-      throw votedCheckError
-    }
-
-    // Filter out words the user has already voted on
-    const votedIdsSet = new Set((votedWords || []).map(v => v.word_id))
-    const unvotedWords = randomWords.filter(word => !votedIdsSet.has(word.id))
-
-    // If we don't have enough words after filtering, try again with a different batch
-    if (unvotedWords.length < pageSize && randomWords.length >= pageSize * 2) {
-      // Recursive call to try again with different random words
-      return getUnvotedWords(userId, page, pageSize, searchQuery)
-    }
-
-    // Calculate pagination
-    const start = (page - 1) * pageSize
-    const end = start + pageSize
-    const paginatedWords = unvotedWords.slice(start, end)
+    // Convertir los datos al formato Word
+    const words: Word[] = data.map(item => ({
+      id: item.id,
+      word: item.word,
+      created_at: item.created_at
+    }))
 
     return {
-      words: paginatedWords,
-      total: totalUnvoted
+      words,
+      total
     }
   } catch (err) {
     console.error('Error en getUnvotedWords:', err)
