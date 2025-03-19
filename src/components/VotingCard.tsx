@@ -35,9 +35,11 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
     return voteHistory?.some(vote => vote.id === word.id && vote.difficulty === difficulty)
   }
 
+  const showUndoButton = voteHistory && voteHistory.length > 0 && voteHistory[0].id !== word.id
+
   return (
     <div className="card card__voting">
-      {voteHistory && voteHistory.length > 0 && (
+      {showUndoButton && (
         <div className="undo-btn mb-6 max-w-md mx-auto">
           <button
             className=""
@@ -55,9 +57,9 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
         <p className="text-muted">Indica la dificultad de la palabra. Puedes pulsar sobre la palabra para ver su significado en el diccionario.</p>
         <div className="flex flex-col gap-xs">
           <div className="button-group flex flex-col justify-center gap-xs">
-            <div className="flex flex-col gap-sm">
+            <div className="flex flex-col gap-xs">
               <button
-                className={`btn btn-lg btn-tertiary w-100 ${checkPreviousVote('not_exist') ? 'prev-vote' : ''}flex align-center gap-sm`}
+                className={`btn btn-lg btn-tertiary w-100 ${checkPreviousVote('not_exist') ? 'prev-vote' : ''} flex align-center gap-sm`}
                 onClick={() => handleVote('not_exist')}
                 disabled={isLoading || localLoading}
               >
@@ -65,7 +67,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
                 <span>🤷‍♂️</span>
               </button>
               <button
-                className={`btn btn-lg btn-error w-100 ${checkPreviousVote('difficult') ? 'prev-vote' : ''}flex align-center gap-sm`}
+                className={`btn btn-lg btn-error w-100 ${checkPreviousVote('difficult') ? 'prev-vote' : ''} flex align-center gap-sm`}
                 onClick={() => handleVote('difficult')}
                 disabled={isLoading || localLoading}
               >
@@ -73,7 +75,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
                 <span>😥</span>
               </button>
               <button
-                className={`btn btn-lg btn-success w-100 ${checkPreviousVote('easy') ? 'prev-vote' : ''}flex align-center gap-sm`}
+                className={`btn btn-lg btn-success w-100 ${checkPreviousVote('easy') ? 'prev-vote' : ''} flex align-center gap-sm`}
                 onClick={() => handleVote('easy')}
                 disabled={isLoading || localLoading}
               >

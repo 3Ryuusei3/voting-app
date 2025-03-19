@@ -9,6 +9,7 @@ import { DifficultyFilters } from '../components/DifficultyFilters'
 import { VotesTable } from '../components/VotesTable'
 import { UnvotedWordsTable } from '../components/UnvotedWordsTable'
 import { Pagination } from '../components/Pagination'
+import filterIcon from '../assets/filter-icon.svg'
 
 interface VoteWithWord extends Vote {
   word: Word
@@ -29,6 +30,7 @@ const HistoryPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all')
+  const [showFilters, setShowFilters] = useState(false)
   const pageSize = 10
 
   // Redirect if not authenticated
@@ -193,6 +195,10 @@ const HistoryPage = () => {
     setCurrentPage(1)
   }
 
+  const handleShowFilters = () => {
+    setShowFilters(!showFilters)
+  }
+
   const showClearButton = searchInput.length > 0 || difficultyFilter !== 'all'
 
   // Show loading state while checking authentication
@@ -222,7 +228,7 @@ const HistoryPage = () => {
         <div className="flex flex-col gap-2xs justify-center align-center w-100">
           <div className="card card__history mb-sm">
             <div className="card-body">
-              <div className="flex gap-sm justify-center align-center bp-sm">
+              <div className={`filter-section ${showFilters ? '' : 'hidden'} flex gap-xs justify-center align-center bp-sm`}>
                 <SearchBar
                   searchInput={searchInput}
                   onSearchInput={handleSearchInput}
@@ -242,21 +248,46 @@ const HistoryPage = () => {
                       isLoading={isLoading}
                     />
                   )}
-                  <button
-                    className={`btn btn-xs ${showUnvoted ? 'btn-primary' : 'btn-secondary'} text-join`}
-                    onClick={() => {
-                      setShowUnvoted(!showUnvoted)
-                      setCurrentPage(1)
-                      setSearchInput('')
-                      setSearchQuery('')
-                    }}
-                    disabled={isLoading}
-                  >
-                    {showUnvoted ? 'Votadas' : 'Sin votar'}
-                  </button>
                 </div>
               </div>
-              <div className="overflow-x-auto">
+
+              <div className="section-btn-group">
+                <button
+                  className={`btn btn-xs ${showUnvoted ? 'btn-secondary' : 'btn-primary'} text-join`}
+                  onClick={() => {
+                    setShowUnvoted(false)
+                    setCurrentPage(1)
+                    setSearchInput('')
+                    setSearchQuery('')
+                  }}
+                  disabled={isLoading}
+                >
+                  Votadas
+                </button>
+                <button
+                  className={`filter-btn btn btn-xs-square ${showFilters ? 'btn-white' : 'btn-gray'}  btn-primary`}
+                  onClick={() => {
+                    handleShowFilters()
+                  }}
+                  disabled={isLoading || isSearchDisabled}
+                >
+                  <img src={filterIcon} alt="Mostrar filtros" width={16} height={16} />
+                </button>
+                <button
+                  className={`btn btn-xs ${showUnvoted ? 'btn-primary' : 'btn-secondary'} text-join`}
+                  onClick={() => {
+                    setShowUnvoted(true)
+                    setCurrentPage(1)
+                    setSearchInput('')
+                    setSearchQuery('')
+                  }}
+                  disabled={isLoading}
+                >
+                  Sin votar
+                </button>
+              </div>
+
+              <div>
                 {showUnvoted ? (
                   unvotedWords.length > 0 ? (
                     <UnvotedWordsTable

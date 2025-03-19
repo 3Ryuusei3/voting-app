@@ -27,7 +27,7 @@ export const SearchBar = ({
   return (
     <div className="flex items-center gap-sm w-100">
       <button
-        className="btn btn-2xs btn-outline btn-primary"
+        className="btn btn-xs-square btn-outline btn-primary"
         onClick={onSearch}
         disabled={isLoading || isSearchDisabled}
       >
@@ -43,7 +43,7 @@ export const SearchBar = ({
         disabled={isLoading}
       />
       <button
-        className={`btn btn-2xs btn-white clear-filters ${showClearButton ? '' : 'hidden'}`}
+        className={`btn btn-xs-square btn-white clear-filters ${showClearButton ? '' : 'hidden'}`}
         onClick={onClearFilters}
       >
         <img src={unfilterIcon} alt="Limpiar filtros" width={16} height={16} />

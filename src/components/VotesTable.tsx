@@ -29,8 +29,8 @@ export const VotesTable = ({
       </thead>
       <tbody>
         {votes.map((vote) => (
-          <tr key={vote.id} className="border-b border-clr-border">
-            <td className="p-2xs">
+          <tr key={vote.id}>
+            <td className="p-3xs">
               <h3 className="text-xl font-bold mb-6">
                 {vote.word ? (
                   <Link
@@ -45,34 +45,34 @@ export const VotesTable = ({
                 )}
               </h3>
             </td>
-            <td className="p-xs text-extra-small">
+            <td className="p-3xs text-extra-small">
               {new Date(vote.created_at).toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit'
               }) + 'H ' + new Date(vote.created_at).toLocaleDateString('es-ES', {
                 day: '2-digit',
                 month: '2-digit',
-                year: 'numeric'
+                year: '2-digit'
               }).split('/').join('/')}
             </td>
-            <td className="p-xs">
+            <td className="p-3xs">
               <div className="flex gap-2xs">
                 <button
-                  className={`btn btn-xs btn-success ${getDifficultyText(vote.difficult) === 'Fácil' ? 'prev-vote' : ''}`}
+                  className={`btn btn-rg btn-success ${getDifficultyText(vote.difficult) === 'Fácil' ? 'prev-vote' : ''}`}
                   onClick={() => onUpdateVote(vote.word_id, 'easy')}
                   disabled={isLoading}
                 >
                   <strong>F</strong>
                 </button>
                 <button
-                  className={`btn btn-xs btn-error ${getDifficultyText(vote.difficult) === 'Difícil' ? 'prev-vote' : ''}`}
+                  className={`btn btn-rg btn-error ${getDifficultyText(vote.difficult) === 'Difícil' ? 'prev-vote' : ''}`}
                   onClick={() => onUpdateVote(vote.word_id, 'difficult')}
                   disabled={isLoading}
                 >
                   <strong>D</strong>
                 </button>
                 <button
-                  className={`btn btn-xs btn-tertiary ${getDifficultyText(vote.difficult) === 'No existe' ? 'prev-vote' : ''}`}
+                  className={`btn btn-rg btn-tertiary ${getDifficultyText(vote.difficult) === 'No existe' ? 'prev-vote' : ''}`}
                   onClick={() => onUpdateVote(vote.word_id, 'not_exist')}
                   disabled={isLoading}
                 >

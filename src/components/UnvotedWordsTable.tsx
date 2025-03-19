@@ -23,7 +23,7 @@ export const UnvotedWordsTable = ({
       <tbody>
         {words.map((word) => (
           <tr key={word.id} className="border-b border-clr-border">
-            <td className="p-2xs">
+            <td className="p-3xs">
               <h3 className="text-xl font-bold mb-6">
                 <Link
                   to={`https://dle.rae.es/${word.word}`}
@@ -34,24 +34,24 @@ export const UnvotedWordsTable = ({
                 </Link>
               </h3>
             </td>
-            <td className="p-xs">
+            <td className="p-3xs">
               <div className="flex gap-2xs">
                 <button
-                  className="btn btn-xs btn-success"
+                  className="btn btn-rg btn-success"
                   onClick={() => onVote(word.id, 'easy')}
                   disabled={isLoading}
                 >
                   <strong>F</strong>
                 </button>
                 <button
-                  className="btn btn-xs btn-error"
+                  className="btn btn-rg btn-error"
                   onClick={() => onVote(word.id, 'difficult')}
                   disabled={isLoading}
                 >
                   <strong>D</strong>
                 </button>
                 <button
-                  className="btn btn-xs btn-tertiary"
+                  className="btn btn-rg btn-tertiary"
                   onClick={() => onVote(word.id, 'not_exist')}
                   disabled={isLoading}
                 >

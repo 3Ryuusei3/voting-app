@@ -19,7 +19,7 @@ export const Pagination = ({
   return (
     <div className="flex justify-center gap-sm">
       <button
-        className="btn btn-2xs btn-secondary"
+        className="btn btn-xs-square btn-secondary"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1 || isLoading}
       >
@@ -29,7 +29,7 @@ export const Pagination = ({
         Página {currentPage} de {totalPages}
       </span>
       <button
-        className="btn btn-2xs btn-secondary"
+        className="btn btn-xs-square btn-secondary"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages || isLoading}
       >
