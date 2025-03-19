@@ -51,14 +51,9 @@ const HistoryPage = () => {
 
       try {
         if (showUnvoted) {
-          if (!searchQuery) {
-            setUnvotedWords([])
-            setTotalVotes(0)
-          } else {
-            const { words, total } = await getUnvotedWords(user.id, currentPage, pageSize, searchQuery)
-            setUnvotedWords(words)
-            setTotalVotes(total)
-          }
+          const { words, total } = await getUnvotedWords(user.id, currentPage, pageSize, searchQuery)
+          setUnvotedWords(words)
+          setTotalVotes(total)
         } else {
           const { votes: newVotes, total } = await getVoteHistory(user.id, currentPage, pageSize, searchQuery, difficultyFilter)
           setVotes(newVotes)
@@ -121,25 +116,21 @@ const HistoryPage = () => {
   }
 
   const handleSearch = () => {
-    if (searchInput.length < 3) return
     setSearchQuery(searchInput)
     setCurrentPage(1) // Reset to first page when searching
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchInput.length >= 3) {
+    if (e.key === 'Enter') {
       handleSearch()
     }
   }
 
   const getSearchPlaceholder = () => {
-    if (searchInput.length > 0 && searchInput.length < 3) {
-      return `Introduce al menos ${3 - searchInput.length} caracter${3 - searchInput.length === 1 ? 'e' : 'es'} más...`
-    }
-    return "Buscar con al menos 3 letras..."
+    return "Buscar palabras..."
   }
 
-  const isSearchDisabled = searchInput.length < 3
+  const isSearchDisabled = false
 
   const handleDifficultyFilter = (filter: DifficultyFilter) => {
     setDifficultyFilter(filter)
@@ -267,11 +258,7 @@ const HistoryPage = () => {
               </div>
               <div className="overflow-x-auto">
                 {showUnvoted ? (
-                  !searchQuery ? (
-                    <div className="text-center p-lg">
-                      <p className="text-muted">Introduce un término de al menos 3 caracteres en el campo de búsqueda para ver palabras sin votar.</p>
-                    </div>
-                  ) : unvotedWords.length > 0 ? (
+                  unvotedWords.length > 0 ? (
                     <UnvotedWordsTable
                       words={unvotedWords}
                       isLoading={isLoading}
@@ -279,7 +266,11 @@ const HistoryPage = () => {
                     />
                   ) : (
                     <div className="text-center p-lg">
-                      <p className="text-muted">No se encontraron palabras no votadas que coincidan con tu búsqueda.</p>
+                      <p className="text-muted">
+                        {!searchQuery
+                          ? "No hay palabras sin votar."
+                          : "No se encontraron palabras no votadas que coincidan con tu búsqueda."}
+                      </p>
                     </div>
                   )
                 ) : (
