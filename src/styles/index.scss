@@ -403,6 +403,10 @@ input {
   color: var(--clr-error);
 }
 
+.text-join {
+  white-space: nowrap;
+}
+
 .link {
   color: var(--clr-primary);
   text-decoration: underline;
@@ -605,6 +609,10 @@ input {
 
   &__voting {
     margin-top: 10vh;
+  }
+
+  &__history {
+    min-height: 515px;
   }
 }
 

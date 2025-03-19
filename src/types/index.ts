@@ -21,3 +21,5 @@ export interface Vote {
 export interface VoteHistory extends Word {
   difficulty: 'easy' | 'difficult' | 'not_exist'
 }
+
+export type DifficultyFilter = 'all' | 'easy' | 'difficult' | 'not_exist'
