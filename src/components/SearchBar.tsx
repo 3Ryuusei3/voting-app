@@ -1,4 +1,5 @@
 import searchIcon from '../assets/search-icon.svg'
+import unfilterIcon from '../assets/unfilter-icon.svg'
 
 interface SearchBarProps {
   searchInput: string
@@ -8,6 +9,8 @@ interface SearchBarProps {
   isLoading: boolean
   isSearchDisabled: boolean
   placeholder: string
+  onClearFilters: () => void
+  showClearButton: boolean
 }
 
 export const SearchBar = ({
@@ -17,12 +20,14 @@ export const SearchBar = ({
   onKeyPress,
   isLoading,
   isSearchDisabled,
-  placeholder
+  placeholder,
+  onClearFilters,
+  showClearButton
 }: SearchBarProps) => {
   return (
     <div className="flex items-center gap-sm w-100">
       <button
-        className="btn btn-xs btn-outline btn-primary"
+        className="btn btn-2xs btn-outline btn-primary"
         onClick={onSearch}
         disabled={isLoading || isSearchDisabled}
       >
@@ -37,6 +42,12 @@ export const SearchBar = ({
         className="w-100"
         disabled={isLoading}
       />
+      <button
+        className={`btn btn-2xs btn-white clear-filters ${showClearButton ? '' : 'hidden'}`}
+        onClick={onClearFilters}
+      >
+        <img src={unfilterIcon} alt="Limpiar filtros" width={16} height={16} />
+      </button>
     </div>
   )
 }

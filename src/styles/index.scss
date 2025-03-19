@@ -92,6 +92,10 @@ input {
   border-radius: var(--radius-sm);
   padding: var(--space-xs) var(--space-sm);
   color: var(--clr-text);
+
+  &::placeholder {
+    font-size: var(--fs-extra-small);
+  }
 }
 
 // Utility Classes
@@ -566,6 +570,32 @@ input {
   }
 }
 
+.btn-white {
+  background-color: var(--clr-text);
+  color: var(--clr-surface);
+
+  &:hover {
+    background-color: var(--clr-white);
+  }
+}
+
+.btn-2xs {
+  padding: var(--space-xs) var(--space-xs);
+}
+
+.clear-filters {
+  transition: all 0.2s ease;
+
+  &.hidden, &.hidden > * {
+    width: 0;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+    border: none !important;
+  }
+}
+
 .btn-xs {
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--fs-small);
@@ -612,7 +642,7 @@ input {
   }
 
   &__history {
-    min-height: 515px;
+    min-height: 500px;
   }
 }
 

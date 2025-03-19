@@ -195,6 +195,15 @@ const HistoryPage = () => {
     setCurrentPage(1)
   }, [showUnvoted])
 
+  const handleClearFilters = () => {
+    setSearchInput('')
+    setSearchQuery('')
+    setDifficultyFilter('all')
+    setCurrentPage(1)
+  }
+
+  const showClearButton = searchInput.length > 0 || difficultyFilter !== 'all'
+
   // Show loading state while checking authentication
   if (isCheckingUser) {
     return (
@@ -231,6 +240,8 @@ const HistoryPage = () => {
                   isLoading={isLoading}
                   isSearchDisabled={isSearchDisabled}
                   placeholder={getSearchPlaceholder()}
+                  onClearFilters={handleClearFilters}
+                  showClearButton={showClearButton}
                 />
                 <div className="flex gap-2xs">
                   {!showUnvoted && (
