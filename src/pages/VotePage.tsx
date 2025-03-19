@@ -115,7 +115,7 @@ const VotePage = () => {
     setError(null)
 
     try {
-      // Volver a la palabra anterior sin modificar el historial
+      // Volver a la palabra anterior sin modificar el listado
       setCurrentWordIndex(prev => Math.max(0, prev - 1))
 
       // Update counts

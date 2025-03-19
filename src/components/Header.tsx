@@ -2,7 +2,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import logo from '../assets/woting-logo.svg';
 import offIcon from '../assets/off-icon.svg';
-import historyIcon from '../assets/history-icon.svg';
+import listIcon from '../assets/list-icon.svg';
 import voteIcon from '../assets/vote-icon.svg';
 import googleIcon from '../assets/google-icon.svg';
 const Header = () => {
@@ -20,12 +20,12 @@ const Header = () => {
     <header className="header">
       <div className="header__container">
         <div className="flex items-center justify-center">
-          <Link to="/" className="header__title flex"><img src={logo} alt="Logo" width={95} /></Link>
+          <Link to="/" className="header__title flex"><img src={logo} alt="Logo" width={100} /></Link>
         </div>
         <nav>
           {!user ? (
             <button
-              className={`btn btn-sm ${user ? 'btn-accent' : 'btn-primary'}`}
+              className={`btn ${user ? 'btn-accent' : 'btn-primary'}`}
               onClick={handleAuth}
               disabled={isLoading}
             >
@@ -38,15 +38,15 @@ const Header = () => {
             </button>
           ) : (
             <>
-              <Link to="/vote" className="btn btn-primary btn-xs flex">
+              <Link to="/vote" className="btn btn-primary flex">
                 <span>Votar</span>
                 <img src={voteIcon} alt="Logo" width={28} height={28} />
               </Link>
-              <Link to="/history" className="btn btn-gray btn-xs flex">
-                <span>Historial</span>
-                <img src={historyIcon} alt="Logo" width={28} height={28} />
+              <Link to="/history" className="btn btn-gray flex">
+                <span>Listado</span>
+                <img src={listIcon} alt="Logo" width={28} height={28} />
               </Link>
-              <Link to="/" className="btn btn-error btn-xs flex" onClick={handleAuth}>
+              <Link to="/" className="btn btn-error flex" onClick={handleAuth}>
                 <span>Cerrar sesión</span>
                 <img src={offIcon} alt="Logo" width={28} height={28} />
               </Link>

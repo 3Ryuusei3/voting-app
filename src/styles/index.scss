@@ -577,11 +577,6 @@ input {
     background-color: var(--clr-white);
   }
 }
-
-.btn-2xs {
-  padding: var(--space-xs) var(--space-xs);
-}
-
 .clear-filters {
   transition: all 0.2s ease;
 
@@ -594,6 +589,11 @@ input {
     border: none !important;
   }
 }
+
+.btn-2xs {
+  padding: var(--space-xs) var(--space-xs);
+}
+
 
 .btn-xs {
   padding: var(--space-xs) var(--space-sm);
@@ -814,6 +814,11 @@ input {
       display: flex;
       align-items: center;
       gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-rg);
+
+      @media screen and (max-width: 576px) {
+        padding: var(--space-xs);
+      }
 
       span {
         font-size: var(--fs-medium);

@@ -216,7 +216,7 @@ const HistoryPage = () => {
 
       {isInitialLoading ? (
         <div className="flex items-center justify-center">
-          <p className="text-muted text-large">Cargando historial...</p>
+          <p className="text-muted text-large">Cargando listado...</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2xs justify-center align-center w-100">
@@ -285,7 +285,7 @@ const HistoryPage = () => {
                     <div className="text-center p-lg">
                       <p className="text-muted">
                         {!searchQuery
-                          ? "No hay votos en tu historial. Usa el botón de arriba para ir a votar."
+                          ? "No hay votos en tu listado. Usa el botón de arriba para ir a votar."
                           : "No se encontraron votos que coincidan con tu búsqueda."}
                       </p>
                       {!searchQuery && (

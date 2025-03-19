@@ -63,7 +63,7 @@ const AuthenticatedContent = () => {
 
         <div className="flex gap-sm bp-sm">
           <Link to="/history" className="btn btn-secondary   w-100">
-            Ver historial de votos
+            Ver listado de votos
           </Link>
           <Link to="/vote" className="btn btn-primary w-100">
             {wordCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
