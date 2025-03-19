@@ -132,7 +132,6 @@ input {
     box-shadow: var(--shadow-md);
 
     div {
-      flex-direction: row !important;
       width: 100%;
       justify-content: space-between;
     }
@@ -638,7 +637,7 @@ input {
   }
 
   &__voting {
-    margin-top: 10vh;
+    margin-top: 8vh;
   }
 
   &__history {

@@ -54,28 +54,31 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
         </h2>
         <p className="text-muted">Indica la dificultad de la palabra. Puedes pulsar sobre la palabra para ver su significado en el diccionario.</p>
         <div className="flex flex-col gap-xs">
-          <button
-            className={`btn btn-lg btn-tertiary w-100 ${checkPreviousVote('not_exist') ? 'prev-vote' : ''}`}
-            onClick={() => handleVote('not_exist')}
-            disabled={isLoading || localLoading}
-          >
-            NO EXISTE
-          </button>
           <div className="button-group flex flex-col justify-center gap-xs">
             <div className="flex flex-col gap-sm">
               <button
-                className={`btn btn-lg btn-error w-100 ${checkPreviousVote('difficult') ? 'prev-vote' : ''}`}
+                className={`btn btn-lg btn-tertiary w-100 ${checkPreviousVote('not_exist') ? 'prev-vote' : ''}flex align-center gap-sm`}
+                onClick={() => handleVote('not_exist')}
+                disabled={isLoading || localLoading}
+              >
+                <span>NO EXISTE</span>
+                <span>🤷‍♂️</span>
+              </button>
+              <button
+                className={`btn btn-lg btn-error w-100 ${checkPreviousVote('difficult') ? 'prev-vote' : ''}flex align-center gap-sm`}
                 onClick={() => handleVote('difficult')}
                 disabled={isLoading || localLoading}
               >
-                DIFÍCIL
+                <span>DIFÍCIL</span>
+                <span>😥</span>
               </button>
               <button
-                className={`btn btn-lg btn-success w-100 ${checkPreviousVote('easy') ? 'prev-vote' : ''}`}
+                className={`btn btn-lg btn-success w-100 ${checkPreviousVote('easy') ? 'prev-vote' : ''}flex align-center gap-sm`}
                 onClick={() => handleVote('easy')}
                 disabled={isLoading || localLoading}
               >
-                FÁCIL
+                <span>FÁCIL</span>
+                <span>☕️</span>
               </button>
             </div>
           </div>
