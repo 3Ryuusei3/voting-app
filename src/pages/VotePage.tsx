@@ -172,7 +172,7 @@ const VotePage = () => {
     return (
       <div className="container">
         <div className="card max-w-md w-full mx-auto">
-          <div className="card-body text-center">
+          <div className="card-body gap-md text-center">
             <h2 className="text-xl font-medium mb-4">¡Has votado todas las palabras disponibles!</h2>
             <p className="text-muted mb-6">Vuelve más tarde para votar nuevas palabras.</p>
             <div className="mb-6">

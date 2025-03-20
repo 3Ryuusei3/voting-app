@@ -50,7 +50,7 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
           </button>
         </div>
       )}
-      <div className="card-body text-center">
+      <div className="card-body gap-md text-center">
         <h2 className="text-2xl font-bold mb-6">
           <Link to={`https://dle.rae.es/${word.word}`} target="_blank">{word.word.toUpperCase()}</Link>
         </h2>

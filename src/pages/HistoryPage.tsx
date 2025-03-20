@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getVoteHistory, updateVote, getUnvotedWords } from '../lib/historyService'
-import { submitVote } from '../lib/wordService'
+import { submitVote, getWordCounts } from '../lib/wordService'
 import type { Vote, Word, DifficultyFilter } from '../types'
 import { SearchBar } from '../components/SearchBar'
 import { DifficultyFilters } from '../components/DifficultyFilters'
@@ -31,6 +31,14 @@ const HistoryPage = () => {
   const [searchInput, setSearchInput] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all')
   const [showFilters, setShowFilters] = useState(false)
+  const [wordCounts, setWordCounts] = useState({
+    voted: 0,
+    unvoted: 0,
+    total: 0,
+    easyWords: 0,
+    difficultWords: 0,
+    notExistWords: 0
+  })
   const pageSize = 10
 
   // Redirect if not authenticated
@@ -73,6 +81,22 @@ const HistoryPage = () => {
 
     loadData()
   }, [user, currentPage, searchQuery, difficultyFilter, showUnvoted])
+
+  // Load word counts
+  useEffect(() => {
+    if (!user) return
+
+    const loadWordCounts = async () => {
+      try {
+        const counts = await getWordCounts(user.id)
+        setWordCounts(counts)
+      } catch (err) {
+        console.error('Error al cargar conteos de palabras:', err)
+      }
+    }
+
+    loadWordCounts()
+  }, [user])
 
   const handleUpdateVote = async (wordId: number, newDifficulty: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
@@ -147,6 +171,11 @@ const HistoryPage = () => {
 
     try {
       await submitVote(user.id, wordId, difficult)
+
+      // Get updated word counts
+      const counts = await getWordCounts(user.id)
+      setWordCounts(counts)
+
       // Get updated data
       const { words, total } = await getUnvotedWords(user.id, currentPage, pageSize, searchQuery)
       setUnvotedWords(words)
@@ -183,9 +212,12 @@ const HistoryPage = () => {
     }
   }, [totalVotes, currentPage])
 
-  // Reset page when switching views
+  // Reset page and clear filters when switching views
   useEffect(() => {
     setCurrentPage(1)
+    setSearchInput('')
+    setSearchQuery('')
+    setDifficultyFilter('all')
   }, [showUnvoted])
 
   const handleClearFilters = () => {
@@ -200,6 +232,32 @@ const HistoryPage = () => {
   }
 
   const showClearButton = searchInput.length > 0 || difficultyFilter !== 'all'
+
+  const getCompletionPercentage = () => {
+    if (showUnvoted) {
+      return wordCounts.total > 0
+        ? Number((wordCounts.unvoted / wordCounts.total) * 100).toFixed(2)
+        : 0
+    } else {
+      if (difficultyFilter === 'all') {
+        return wordCounts.total > 0
+          ? Number(((wordCounts.voted / wordCounts.total) * 100).toFixed(2))
+          : 0
+      } else {
+        const filteredCount = difficultyFilter === 'easy'
+          ? wordCounts.easyWords
+          : difficultyFilter === 'difficult'
+            ? wordCounts.difficultWords
+            : wordCounts.notExistWords
+
+        return wordCounts.voted > 0
+          ? Number((filteredCount / wordCounts.voted) * 100).toFixed(2)
+          : 0
+      }
+    }
+  }
+
+  const completionPercentage = getCompletionPercentage()
 
   // Show loading state while checking authentication
   if (isCheckingUser) {
@@ -226,8 +284,8 @@ const HistoryPage = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-2xs justify-center align-center w-100">
-          <div className="card card__history mb-sm">
-            <div className="card-body">
+          <div className="card card__history mb-xs">
+            <div className="card-body gap-sm">
               <div className={`filter-section ${showFilters ? '' : 'hidden'} flex gap-xs justify-center align-center bp-sm`}>
                 <SearchBar
                   searchInput={searchInput}
@@ -331,6 +389,26 @@ const HistoryPage = () => {
                   )
                 )}
               </div>
+
+              {totalVotes > 0 && (
+                <div className="text-center text-small text-muted mt-2">
+                  <span>
+                    <strong>{totalVotes}</strong>
+                    {showUnvoted
+                          ? ' palabras sin votar'
+                          : difficultyFilter === 'all'
+                            ? ' palabras votadas'
+                            : ` de las votadas (${getDifficultyText(difficultyFilter)})`
+                        }
+                    {' '}
+                    {wordCounts.total > 0 && (
+                      <span className="ml-2">
+                        <strong>({completionPercentage}%)</strong>
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

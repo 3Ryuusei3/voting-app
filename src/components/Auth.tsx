@@ -8,7 +8,7 @@ const Auth = () => {
   return (
     <div className="v-section items-center justify-center">
       <div className="card">
-        <div className="card-body text-center">
+        <div className="card-body gap-md text-center">
           <h2 className="text-large font-medium">¡Bienvenido a Woting!</h2>
           <p className="text-muted">En esta aplicación podrás votar para filtrar la lista de palabras del juego <Link to="https://wo-ses.vercel.app/" className="link">WOS-ES</Link>.</p>
           <p className="text-muted mb-xs">

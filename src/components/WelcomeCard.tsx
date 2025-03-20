@@ -42,7 +42,7 @@ const AuthenticatedContent = () => {
 
   return (
     <div className="card">
-      <div className="card-body">
+      <div className="card-body gap-md">
         <h2 className="text-large font-medium">¡Bienvenido, {user?.identities?.[0]?.identity_data?.full_name?.split(' ')[0] ?? user.email}!</h2>
         <p className="text-muted">En esta aplicación podrás votar para filtrar la lista de palabras del juego <Link to="https://wo-ses.vercel.app/" className="link">WOS-ES</Link>.</p>
         <p className="text-muted mb-4">

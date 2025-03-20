@@ -25,7 +25,7 @@ export const SearchBar = ({
   showClearButton
 }: SearchBarProps) => {
   return (
-    <div className="flex items-center gap-sm w-100">
+    <div className="flex items-center gap-xs w-100">
       <button
         className="btn btn-xs-square btn-outline btn-primary"
         onClick={onSearch}

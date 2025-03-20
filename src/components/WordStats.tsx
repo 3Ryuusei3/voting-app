@@ -17,7 +17,7 @@ const WordStats = ({
   className = ''
 }: WordStatsProps) => {
   const totalProgressPercentage = wordCounts.total > 0
-    ? Math.ceil((wordCounts.voted / wordCounts.total) * 100)
+    ? Math.floor((wordCounts.voted / wordCounts.total) * 100)
     : 0
 
   return (

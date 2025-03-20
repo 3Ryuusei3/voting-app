@@ -23,7 +23,7 @@ export const VotesTable = ({
       <thead>
         <tr className="border-b border-clr-border">
           <th className="text-left p-xs text-muted text-small w-100">Palabra</th>
-          <th className="text-left p-xs text-muted text-small whitespace-nowrap w-fit">Fecha</th>
+          <th className="text-left time-cell text-muted text-small whitespace-nowrap w-fit">Fecha</th>
           <th className="text-left p-xs text-muted text-small whitespace-nowrap w-fit">Acciones</th>
         </tr>
       </thead>
@@ -45,7 +45,7 @@ export const VotesTable = ({
                 )}
               </h3>
             </td>
-            <td className="p-3xs text-extra-small">
+            <td className="time-cell text-extra-small">
               {new Date(vote.created_at).toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit'
