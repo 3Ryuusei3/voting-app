@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { getVoteHistory, updateVote, getUnvotedOptions } from '../lib/historyService'
-import { submitVote, getOptionCounts } from '../lib/optionService'
+import { getVoteHistory, updateVote, getUnvotedOptions, getCachedOptionCounts } from '../lib/historyService'
+import { submitVote } from '../lib/optionService'
 import type { Vote, Option, DifficultyFilter } from '../types'
 import { SearchBar } from '../components/SearchBar'
 import { DifficultyFilters } from '../components/DifficultyFilters'
@@ -82,22 +82,59 @@ const HistoryPage = () => {
     loadData()
   }, [user, currentPage, searchQuery, filterSelection, showUnvoted])
 
-  // Load option counts
-  useEffect(() => {
+  // Función memoizada para cargar los conteos
+  const loadOptionCounts = useCallback(async (forceRefresh = false) => {
     if (!user) return
 
-    const loadOptionCounts = async () => {
-      try {
-        const counts = await getOptionCounts(user.id)
-        setOptionCounts(counts)
-      } catch (err) {
-        console.error('Error al cargar conteos de palabras:', err)
-      }
+    try {
+      const counts = await getCachedOptionCounts(user.id, forceRefresh)
+      setOptionCounts(counts)
+    } catch (err) {
+      console.error('Error al cargar conteos de palabras:', err)
     }
-
-    loadOptionCounts()
   }, [user])
 
+  // Cargar conteos iniciales
+  useEffect(() => {
+    if (!user) return
+    loadOptionCounts()
+  }, [user, loadOptionCounts])
+
+  // Actualizar conteos después de votar
+  const handleVote = async (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => {
+    if (!user) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await submitVote(user.id, optionId, filter)
+
+      // Forzar actualización de conteos
+      await loadOptionCounts(true)
+
+      // Get updated data
+      const { options, total } = await getUnvotedOptions(user.id, currentPage, pageSize, searchQuery)
+      setUnvotedOptions(options)
+      setTotalVotes(total)
+
+      if (total === 0) {
+        setCurrentPage(1)
+      } else {
+        const maxPage = Math.ceil(total / pageSize)
+        if (currentPage > maxPage) {
+          setCurrentPage(maxPage)
+        }
+      }
+    } catch (err) {
+      setError('Error al registrar el voto. Por favor, intenta de nuevo.')
+      console.error('Error al votar:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Actualizar conteos después de cambiar un voto
   const handleUpdateVote = async (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
 
@@ -115,6 +152,9 @@ const HistoryPage = () => {
             : vote
         )
       )
+
+      // Forzar actualización de conteos
+      await loadOptionCounts(true)
     } catch (err) {
       setError('Error al actualizar el voto. Por favor, intenta de nuevo.')
       console.error('Error al actualizar voto:', err)
@@ -161,40 +201,6 @@ const HistoryPage = () => {
   const handleDifficultyFilter = (filter: DifficultyFilter) => {
     setDifficultyFilter(filter)
     setCurrentPage(1) // Reset to first page when changing filter
-  }
-
-  const handleVote = async (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => {
-    if (!user) return
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      await submitVote(user.id, optionId, filter)
-
-      // Get updated option counts
-      const counts = await getOptionCounts(user.id)
-      setOptionCounts(counts)
-
-      // Get updated data
-      const { options, total } = await getUnvotedOptions(user.id, currentPage, pageSize, searchQuery)
-      setUnvotedOptions(options)
-      setTotalVotes(total)
-
-      if (total === 0) {
-        setCurrentPage(1)
-      } else {
-        const maxPage = Math.ceil(total / pageSize)
-        if (currentPage > maxPage) {
-          setCurrentPage(maxPage)
-        }
-      }
-    } catch (err) {
-      setError('Error al registrar el voto. Por favor, intenta de nuevo.')
-      console.error('Error al votar:', err)
-    } finally {
-      setIsLoading(false)
-    }
   }
 
   // Calculate total pages, ensuring it's at least 1
@@ -390,22 +396,20 @@ const HistoryPage = () => {
                 )}
               </div>
 
-              {totalVotes > 0 && (
+              {totalVotes > 0 && optionCounts.total > 0 && (
                 <div className="text-center text-small text-muted mt-2">
                   <span>
                     <strong>{totalVotes}</strong>
                     {showUnvoted
-                          ? ' palabras sin votar'
-                          : filterSelection === 'all'
-                            ? ' palabras votadas'
-                            : ` de las votadas (${getDifficultyText(filterSelection)})`
-                        }
+                      ? ' palabras sin votar'
+                      : filterSelection === 'all'
+                        ? ' palabras votadas'
+                        : ` de las votadas (${getDifficultyText(filterSelection)})`
+                    }
                     {' '}
-                    {optionCounts.total > 0 && (
-                      <span className="ml-2">
-                        <strong>({completionPercentage}%)</strong>
-                      </span>
-                    )}
+                    <span className="ml-2">
+                      <strong>({completionPercentage}%)</strong>
+                    </span>
                   </span>
                 </div>
               )}

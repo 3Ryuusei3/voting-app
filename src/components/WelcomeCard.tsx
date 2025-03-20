@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
-import { getOptionCounts } from '../lib/optionService'
+import { getCachedOptionCounts } from '../lib/historyService'
 import OptionStats from './OptionStats'
 
 const AuthenticatedContent = () => {
@@ -27,7 +27,7 @@ const AuthenticatedContent = () => {
 
     setIsLoading(true)
     try {
-      const counts = await getOptionCounts(user.id)
+      const counts = await getCachedOptionCounts(user.id)
       setOptionCounts(counts)
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
@@ -62,7 +62,7 @@ const AuthenticatedContent = () => {
         )}
 
         <div className="flex gap-sm bp-sm">
-          <Link to="/history" className="btn btn-secondary   w-100">
+          <Link to="/history" className="btn btn-secondary w-100">
             Ver listado de votos
           </Link>
           <Link to="/vote" className="btn btn-primary w-100">

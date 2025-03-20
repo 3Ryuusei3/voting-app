@@ -43,63 +43,19 @@ export async function getOptionCounts(userId: string): Promise<{
   notExistOptions: number
 }> {
   try {
-    // Obtener conteo de palabras votadas
-    const { count: votedCount, error: votedError } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
+    const { data, error } = await supabase
+      .rpc('get_option_counts', { p_user_id: userId })
 
-    if (votedError) throw votedError
+    if (error) throw error
 
-    // Obtener conteo de palabras marcadas como fáciles
-    const { count: easyCount, error: easyError } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('filter', 'easy')
-
-    if (easyError) throw easyError
-
-    // Obtener conteo de palabras marcadas como difíciles
-    const { count: difficultCount, error: difficultError } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('filter', 'difficult')
-
-    if (difficultError) throw difficultError
-
-    // Obtener conteo de palabras marcadas como no existentes
-    const { count: notExistCount, error: notExistError } = await supabase
-      .from('votes')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('filter', 'not_exist')
-
-    if (notExistError) throw notExistError
-
-    // Obtener conteo total de palabras
-    const { count: totalCount, error: totalError } = await supabase
-      .from('options')
-      .select('*', { count: 'exact', head: true })
-
-    if (totalError) throw totalError
-
-    // Calcular palabras no votadas
-    const safeVotedCount = votedCount || 0
-    const safeTotalCount = totalCount || 0
-    const safeEasyCount = easyCount || 0
-    const safeDifficultCount = difficultCount || 0
-    const safeNotExistCount = notExistCount || 0
-    const unvotedCount = safeTotalCount - safeVotedCount
-
+    const counts = data[0]
     return {
-      voted: safeVotedCount,
-      unvoted: unvotedCount,
-      total: safeTotalCount,
-      easyOptions: safeEasyCount,
-      difficultOptions: safeDifficultCount,
-      notExistOptions: safeNotExistCount
+      voted: Number(counts.voted_count) || 0,
+      unvoted: Number(counts.total_count - counts.voted_count) || 0,
+      total: Number(counts.total_count) || 0,
+      easyOptions: Number(counts.easy_count) || 0,
+      difficultOptions: Number(counts.difficult_count) || 0,
+      notExistOptions: Number(counts.not_exist_count) || 0
     }
   } catch (error) {
     console.error('Error al obtener conteos de palabras:', error)
@@ -180,84 +136,20 @@ export async function getVoteHistory(
   total: number
 }> {
   try {
-    const start = (page - 1) * pageSize
-    const end = start + pageSize - 1
-
-    // Build the query
-    let query = supabase
-      .from('votes')
-      .select(`
-        *,
-        option:options(*)
-      `)
-      .eq('user_id', userId)
-
-    // Apply search filter if provided
-    if (searchQuery) {
-      // First get the option IDs that match the search
-      const { data: matchingOptions, error: optionError } = await supabase
-        .from('options')
-        .select('id')
-        .ilike('option', `%${searchQuery}%`)
-
-      if (optionError) throw optionError
-
-      // Then filter votes by those option IDs
-      if (matchingOptions && matchingOptions.length > 0) {
-        const optionIds = matchingOptions.map(w => w.id)
-        query = query.in('option_id', optionIds)
-      } else {
-        // If no matching options, return empty result
-        return { votes: [], total: 0 }
-      }
-    }
-
-    // Apply filter filter if not 'all'
-    if (filterSelection !== 'all') {
-      query = query.eq('filter', filterSelection)
-    }
-
-    // Get total count with the same filters
-    let countQuery = supabase
-      .from('votes')
-      .select('*, option:options(*)', { count: 'exact', head: true })
-      .eq('user_id', userId)
-
-    if (searchQuery) {
-      // Use the same option IDs for the count query
-      const { data: matchingOptions, error: optionError } = await supabase
-        .from('options')
-        .select('id')
-        .ilike('option', `%${searchQuery}%`)
-
-      if (optionError) throw optionError
-
-      if (matchingOptions && matchingOptions.length > 0) {
-        const optionIds = matchingOptions.map(w => w.id)
-        countQuery = countQuery.in('option_id', optionIds)
-      } else {
-        return { votes: [], total: 0 }
-      }
-    }
-
-    if (filterSelection !== 'all') {
-      countQuery = countQuery.eq('filter', filterSelection)
-    }
-
-    const { count, error: countError } = await countQuery
-
-    if (countError) throw countError
-
-    // Get paginated results
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .range(start, end)
+    const { data, error } = await supabase
+      .rpc('get_vote_history', {
+        p_user_id: userId,
+        p_page: page,
+        p_page_size: pageSize,
+        p_search_query: searchQuery,
+        p_filter: filterSelection
+      })
 
     if (error) throw error
 
     return {
-      votes: data || [],
-      total: count || 0
+      votes: data[0]?.votes || [],
+      total: Number(data[0]?.total_count) || 0
     }
   } catch (error) {
     console.error('Error al obtener historial de votos:', error)

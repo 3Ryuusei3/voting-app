@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import VotingCard from '../components/VotingCard'
 import OptionStats from '../components/OptionStats'
-import { getUnvotedOptions, submitVote, getOptionCounts, updateVote } from '../lib/optionService'
+import { getUnvotedOptions, submitVote, updateVote } from '../lib/optionService'
+import { getCachedOptionCounts } from '../lib/historyService'
 import type { VoteHistory, Option } from '../types'
 
 const VotePage = () => {
@@ -31,11 +32,11 @@ const VotePage = () => {
     }
   }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded])
 
-  const loadOptionCounts = useCallback(async () => {
+  const loadOptionCounts = useCallback(async (forceRefresh = false) => {
     if (!user) return
 
     try {
-      const counts = await getOptionCounts(user.id)
+      const counts = await getCachedOptionCounts(user.id, forceRefresh)
       setOptionCounts(counts)
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
@@ -88,8 +89,8 @@ const VotePage = () => {
 
       await submitVote(user.id, optionId, filter)
 
-      // Actualizar conteos
-      await loadOptionCounts()
+      // Actualizar conteos forzando refresco del caché
+      await loadOptionCounts(true)
 
       // Pasar a la siguiente palabra
       setCurrentOptionIndex(prev => prev + 1)
@@ -118,8 +119,8 @@ const VotePage = () => {
       // Volver a la palabra anterior sin modificar el listado
       setCurrentOptionIndex(prev => Math.max(0, prev - 1))
 
-      // Update counts
-      await loadOptionCounts()
+      // Update counts forzando refresco del caché
+      await loadOptionCounts(true)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al deshacer el voto'
       setError(errorMessage)
@@ -147,8 +148,8 @@ const VotePage = () => {
         )
       )
 
-      // Update counts
-      await loadOptionCounts()
+      // Update counts forzando refresco del caché
+      await loadOptionCounts(true)
 
       // Pasar a la siguiente palabra
       setCurrentOptionIndex(prev => prev + 1)

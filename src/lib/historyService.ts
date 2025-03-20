@@ -1,110 +1,88 @@
 import { supabase } from './supabase'
 import type { Option, Vote } from '../types'
 
-/**
- * Obtiene el historial de votos del usuario con paginación
- */
-export async function getVoteHistory(
-  userId: string,
-  page: number = 1,
-  pageSize: number = 10,
-  searchQuery: string = '',
-  filterSelection: 'all' | 'easy' | 'difficult' | 'not_exist' = 'all'
-): Promise<{
-  votes: (Vote & { option: Option })[]
+interface VoteHistoryRow {
+  id: number
+  user_id: string
+  option_id: number
+  filter: 'easy' | 'difficult' | 'not_exist'
+  created_at: string
+  option: string
   total: number
-}> {
-  try {
-    const start = (page - 1) * pageSize
-    const end = start + pageSize - 1
-
-    // Build the query
-    let query = supabase
-      .from('votes')
-      .select(`
-        *,
-        option:options(*)
-      `)
-      .eq('user_id', userId)
-
-    // Apply search filter if provided
-    if (searchQuery) {
-      // First get the option IDs that match the search
-      const { data: matchingOptions, error: optionError } = await supabase
-        .from('options')
-        .select('id')
-        .ilike('option', `%${searchQuery}%`)
-
-      if (optionError) throw optionError
-
-      // Then filter votes by those option IDs
-      if (matchingOptions && matchingOptions.length > 0) {
-        const optionIds = matchingOptions.map(w => w.id)
-        query = query.in('option_id', optionIds)
-      } else {
-        // If no matching options, return empty result
-        return { votes: [], total: 0 }
-      }
-    }
-
-    // Apply filter filter if not 'all'
-    if (filterSelection !== 'all') {
-      query = query.eq('filter', filterSelection)
-    }
-
-    // Get total count with the same filters
-    let countQuery = supabase
-      .from('votes')
-      .select('*, option:options(*)', { count: 'exact', head: true })
-      .eq('user_id', userId)
-
-    if (searchQuery) {
-      // Use the same option IDs for the count query
-      const { data: matchingOptions, error: optionError } = await supabase
-        .from('options')
-        .select('id')
-        .ilike('option', `%${searchQuery}%`)
-
-      if (optionError) throw optionError
-
-      if (matchingOptions && matchingOptions.length > 0) {
-        const optionIds = matchingOptions.map(w => w.id)
-        countQuery = countQuery.in('option_id', optionIds)
-      } else {
-        return { votes: [], total: 0 }
-      }
-    }
-
-    if (filterSelection !== 'all') {
-      countQuery = countQuery.eq('filter', filterSelection)
-    }
-
-    const { count, error: countError } = await countQuery
-
-    if (countError) throw countError
-
-    // Get paginated results
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .range(start, end)
-
-    if (error) throw error
-
-    return {
-      votes: data || [],
-      total: count || 0
-    }
-  } catch (error) {
-    console.error('Error al obtener historial de votos:', error)
-    throw error
-  }
+  poll_id?: number
 }
 
 interface UnvotedOptionResult {
   id: number
   option: string
-  total: number
   created_at: string
+  total: number
+}
+
+// Cache para los conteos
+let optionCountsCache: {
+  counts: {
+    voted: number
+    unvoted: number
+    total: number
+    easyOptions: number
+    difficultOptions: number
+    notExistOptions: number
+  } | null
+  timestamp: number
+  userId: string | null
+} = {
+  counts: null,
+  timestamp: 0,
+  userId: null
+}
+
+// Tiempo de expiración del caché (5 minutos)
+const CACHE_EXPIRATION = 5 * 60 * 1000
+
+/**
+ * Obtiene los conteos de opciones con sistema de caché
+ */
+export async function getCachedOptionCounts(userId: string, forceRefresh = false) {
+  const now = Date.now()
+
+  // Usar caché si está disponible y no ha expirado
+  if (
+    !forceRefresh &&
+    optionCountsCache.counts &&
+    optionCountsCache.userId === userId &&
+    now - optionCountsCache.timestamp < CACHE_EXPIRATION
+  ) {
+    return optionCountsCache.counts
+  }
+
+  try {
+    const { data, error } = await supabase
+      .rpc('get_option_counts', { p_user_id: userId })
+
+    if (error) throw error
+
+    const counts = {
+      voted: Number(data[0].voted_count) || 0,
+      unvoted: Number(data[0].total_count - data[0].voted_count) || 0,
+      total: Number(data[0].total_count) || 0,
+      easyOptions: Number(data[0].easy_count) || 0,
+      difficultOptions: Number(data[0].difficult_count) || 0,
+      notExistOptions: Number(data[0].not_exist_count) || 0
+    }
+
+    // Actualizar caché
+    optionCountsCache = {
+      counts,
+      timestamp: now,
+      userId
+    }
+
+    return counts
+  } catch (error) {
+    console.error('Error al obtener conteos:', error)
+    throw error
+  }
 }
 
 /**
@@ -137,10 +115,6 @@ export async function getUnvotedOptions(
       return { options: [], total: 0 }
     }
 
-    // El total viene en el primer registro
-    const total = data[0].total || 0
-
-    // Convertir los datos al formato Option
     const options: Option[] = data.map(item => ({
       id: item.id,
       option: item.option,
@@ -150,7 +124,7 @@ export async function getUnvotedOptions(
 
     return {
       options,
-      total
+      total: Number(data[0]?.total) || 0
     }
   } catch (err) {
     console.error('Error en getUnvotedOptions:', err)
@@ -159,21 +133,87 @@ export async function getUnvotedOptions(
 }
 
 /**
+ * Obtiene el historial de votos del usuario con paginación
+ */
+export async function getVoteHistory(
+  userId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  searchQuery: string = '',
+  filterSelection: 'all' | 'easy' | 'difficult' | 'not_exist' = 'all'
+): Promise<{
+  votes: (Vote & { option: Option })[]
+  total: number
+}> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_vote_history', {
+        p_user_id: userId,
+        p_page: page,
+        p_page_size: pageSize,
+        p_search_query: searchQuery,
+        p_filter: filterSelection
+      }) as { data: VoteHistoryRow[] | null, error: Error | null }
+
+    if (error) throw error
+
+    if (!data || data.length === 0) {
+      return { votes: [], total: 0 }
+    }
+
+    const votes = data.map(row => ({
+      id: row.id,
+      user_id: row.user_id,
+      option_id: row.option_id,
+      filter: row.filter,
+      created_at: row.created_at,
+      poll_id: 1,
+      option: {
+        id: row.option_id,
+        option: row.option,
+        created_at: row.created_at,
+        poll_id: 1
+      }
+    })) as (Vote & { option: Option })[]
+
+    return {
+      votes,
+      total: Number(data[0]?.total) || 0
+    }
+  } catch (error) {
+    console.error('Error al obtener historial de votos:', error)
+    throw error
+  }
+}
+
+/**
  * Actualiza un voto existente
  */
-export async function updateVote(userId: string, optionId: number, filter: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
-  const { data, error } = await supabase
-    .from('votes')
-    .update({ filter })
-    .eq('user_id', userId)
-    .eq('option_id', optionId)
-    .select()
-    .single()
+export async function updateVote(
+  userId: string,
+  optionId: number,
+  filter: 'easy' | 'difficult' | 'not_exist'
+): Promise<Vote> {
+  try {
+    const { data, error } = await supabase
+      .rpc('update_vote', {
+        p_user_id: userId,
+        p_option_id: optionId,
+        p_filter: filter
+      }) as { data: Vote[] | null, error: Error | null }
 
-  if (error) {
+    if (error) {
+      console.error('Error al actualizar voto:', error)
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      throw new Error('No se encontró el voto para actualizar')
+    }
+
+    return data[0]
+  } catch (error) {
     console.error('Error al actualizar voto:', error)
     throw error
   }
-
-  return data
 }
