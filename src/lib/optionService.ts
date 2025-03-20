@@ -1,13 +1,13 @@
 import { supabase } from './supabase'
-import type { Word, Vote } from '../types'
+import type { Option, Vote } from '../types'
 
 /**
  * Obtiene palabras que el usuario aún no ha votado en orden alfabético
  */
-export async function getUnvotedWords(userId: string, limit = 10): Promise<Word[]> {
+export async function getUnvotedOptions(userId: string, limit = 10): Promise<Option[]> {
   try {
     const { data, error } = await supabase
-      .rpc('get_unvoted_words', {
+      .rpc('get_unvoted_options', {
         p_user_id: userId,
         p_page: 1,
         p_page_size: limit,
@@ -19,9 +19,14 @@ export async function getUnvotedWords(userId: string, limit = 10): Promise<Word[
       throw error
     }
 
-    return data || []
+    return data?.map((item: { id: number; option: string; created_at: string }) => ({
+      id: item.id,
+      option: item.option,
+      created_at: item.created_at,
+      poll_id: 1
+    })) || []
   } catch (err) {
-    console.error('Error en getUnvotedWords:', err)
+    console.error('Error en getUnvotedOptions:', err)
     throw err
   }
 }
@@ -29,13 +34,13 @@ export async function getUnvotedWords(userId: string, limit = 10): Promise<Word[
 /**
  * Obtiene el conteo de palabras votadas y no votadas
  */
-export async function getWordCounts(userId: string): Promise<{
+export async function getOptionCounts(userId: string): Promise<{
   voted: number,
   unvoted: number,
   total: number,
-  easyWords: number,
-  difficultWords: number,
-  notExistWords: number
+  easyOptions: number,
+  difficultOptions: number,
+  notExistOptions: number
 }> {
   try {
     // Obtener conteo de palabras votadas
@@ -51,7 +56,7 @@ export async function getWordCounts(userId: string): Promise<{
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('difficult', 'easy')
+      .eq('filter', 'easy')
 
     if (easyError) throw easyError
 
@@ -60,7 +65,7 @@ export async function getWordCounts(userId: string): Promise<{
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('difficult', 'difficult')
+      .eq('filter', 'difficult')
 
     if (difficultError) throw difficultError
 
@@ -69,13 +74,13 @@ export async function getWordCounts(userId: string): Promise<{
       .from('votes')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('difficult', 'not_exist')
+      .eq('filter', 'not_exist')
 
     if (notExistError) throw notExistError
 
     // Obtener conteo total de palabras
     const { count: totalCount, error: totalError } = await supabase
-      .from('words')
+      .from('options')
       .select('*', { count: 'exact', head: true })
 
     if (totalError) throw totalError
@@ -92,9 +97,9 @@ export async function getWordCounts(userId: string): Promise<{
       voted: safeVotedCount,
       unvoted: unvotedCount,
       total: safeTotalCount,
-      easyWords: safeEasyCount,
-      difficultWords: safeDifficultCount,
-      notExistWords: safeNotExistCount
+      easyOptions: safeEasyCount,
+      difficultOptions: safeDifficultCount,
+      notExistOptions: safeNotExistCount
     }
   } catch (error) {
     console.error('Error al obtener conteos de palabras:', error)
@@ -105,13 +110,13 @@ export async function getWordCounts(userId: string): Promise<{
 /**
  * Registra un voto del usuario
  */
-export async function submitVote(userId: string, wordId: number, difficult: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
+export async function submitVote(userId: string, optionId: number, filter: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
   // Verificar si el usuario ya ha votado esta palabra
   const { data: existingVote } = await supabase
     .from('votes')
     .select('*')
     .eq('user_id', userId)
-    .eq('word_id', wordId)
+    .eq('option_id', optionId)
     .single()
 
   if (existingVote) {
@@ -124,8 +129,9 @@ export async function submitVote(userId: string, wordId: number, difficult: 'eas
     .insert([
       {
         user_id: userId,
-        word_id: wordId,
-        difficult: difficult,
+        option_id: optionId,
+        filter: filter,
+        poll_id: 1,
         created_at: new Date().toISOString()
       }
     ])
@@ -143,12 +149,12 @@ export async function submitVote(userId: string, wordId: number, difficult: 'eas
 /**
  * Actualiza un voto existente
  */
-export async function updateVote(userId: string, wordId: number, difficult: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
+export async function updateVote(userId: string, optionId: number, filter: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
   const { data, error } = await supabase
     .from('votes')
-    .update({ difficult })
+    .update({ filter })
     .eq('user_id', userId)
-    .eq('word_id', wordId)
+    .eq('option_id', optionId)
     .select()
     .single()
 
@@ -168,9 +174,9 @@ export async function getVoteHistory(
   page: number = 1,
   pageSize: number = 10,
   searchQuery: string = '',
-  difficultyFilter: 'all' | 'easy' | 'difficult' | 'not_exist' = 'all'
+  filterSelection: 'all' | 'easy' | 'difficult' | 'not_exist' = 'all'
 ): Promise<{
-  votes: (Vote & { word: Word })[]
+  votes: (Vote & { option: Option })[]
   total: number
 }> {
   try {
@@ -182,60 +188,60 @@ export async function getVoteHistory(
       .from('votes')
       .select(`
         *,
-        word:words(*)
+        option:options(*)
       `)
       .eq('user_id', userId)
 
     // Apply search filter if provided
     if (searchQuery) {
-      // First get the word IDs that match the search
-      const { data: matchingWords, error: wordError } = await supabase
-        .from('words')
+      // First get the option IDs that match the search
+      const { data: matchingOptions, error: optionError } = await supabase
+        .from('options')
         .select('id')
-        .ilike('word', `%${searchQuery}%`)
+        .ilike('option', `%${searchQuery}%`)
 
-      if (wordError) throw wordError
+      if (optionError) throw optionError
 
-      // Then filter votes by those word IDs
-      if (matchingWords && matchingWords.length > 0) {
-        const wordIds = matchingWords.map(w => w.id)
-        query = query.in('word_id', wordIds)
+      // Then filter votes by those option IDs
+      if (matchingOptions && matchingOptions.length > 0) {
+        const optionIds = matchingOptions.map(w => w.id)
+        query = query.in('option_id', optionIds)
       } else {
-        // If no matching words, return empty result
+        // If no matching options, return empty result
         return { votes: [], total: 0 }
       }
     }
 
-    // Apply difficulty filter if not 'all'
-    if (difficultyFilter !== 'all') {
-      query = query.eq('difficult', difficultyFilter)
+    // Apply filter filter if not 'all'
+    if (filterSelection !== 'all') {
+      query = query.eq('filter', filterSelection)
     }
 
     // Get total count with the same filters
     let countQuery = supabase
       .from('votes')
-      .select('*, word:words(*)', { count: 'exact', head: true })
+      .select('*, option:options(*)', { count: 'exact', head: true })
       .eq('user_id', userId)
 
     if (searchQuery) {
-      // Use the same word IDs for the count query
-      const { data: matchingWords, error: wordError } = await supabase
-        .from('words')
+      // Use the same option IDs for the count query
+      const { data: matchingOptions, error: optionError } = await supabase
+        .from('options')
         .select('id')
-        .ilike('word', `%${searchQuery}%`)
+        .ilike('option', `%${searchQuery}%`)
 
-      if (wordError) throw wordError
+      if (optionError) throw optionError
 
-      if (matchingWords && matchingWords.length > 0) {
-        const wordIds = matchingWords.map(w => w.id)
-        countQuery = countQuery.in('word_id', wordIds)
+      if (matchingOptions && matchingOptions.length > 0) {
+        const optionIds = matchingOptions.map(w => w.id)
+        countQuery = countQuery.in('option_id', optionIds)
       } else {
         return { votes: [], total: 0 }
       }
     }
 
-    if (difficultyFilter !== 'all') {
-      countQuery = countQuery.eq('difficult', difficultyFilter)
+    if (filterSelection !== 'all') {
+      countQuery = countQuery.eq('filter', filterSelection)
     }
 
     const { count, error: countError } = await countQuery

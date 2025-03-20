@@ -1,28 +1,28 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { VoteHistory, Word } from '../types'
+import type { VoteHistory, Option } from '../types'
 import undoIcon from '../assets/undo-icon.svg'
 interface VotingCardProps {
-  word: Word
-  onVote: (wordId: number, difficult: 'easy' | 'difficult' | 'not_exist') => Promise<void>
+  option: Option
+  onVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
   isLoading: boolean
   voteHistory?: VoteHistory[]
-  onUpdateVote: (wordId: number, newDifficulty: 'easy' | 'difficult' | 'not_exist') => Promise<void>
+  onUpdateVote: (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
   handleUndo: () => Promise<void>
 }
 
-const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handleUndo }: VotingCardProps) => {
+const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, handleUndo }: VotingCardProps) => {
   const [localLoading, setLocalLoading] = useState(false)
 
-  const handleVote = async (difficult: 'easy' | 'difficult' | 'not_exist') => {
+  const handleVote = async (filter: 'easy' | 'difficult' | 'not_exist') => {
     if (isLoading || localLoading) return
 
     setLocalLoading(true)
     try {
-      if (voteHistory && voteHistory.some(vote => vote.id === word.id)) {
-        await onUpdateVote(word.id, difficult)
+      if (voteHistory && voteHistory.some(vote => vote.id === option.id)) {
+        await onUpdateVote(option.id, filter)
       } else {
-        await onVote(word.id, difficult)
+        await onVote(option.id, filter)
       }
     } catch (error) {
       console.error('Error al votar:', error)
@@ -31,11 +31,11 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
     }
   }
 
-  const checkPreviousVote = (difficulty: 'easy' | 'difficult' | 'not_exist') => {
-    return voteHistory?.some(vote => vote.id === word.id && vote.difficulty === difficulty)
+  const checkPreviousVote = (filter: 'easy' | 'difficult' | 'not_exist') => {
+    return voteHistory?.some(vote => vote.id === option.id && vote.filter === filter)
   }
 
-  const showUndoButton = voteHistory && voteHistory.length > 0 && voteHistory[0].id !== word.id
+  const showUndoButton = voteHistory && voteHistory.length > 0 && voteHistory[0].id !== option.id
 
   return (
     <div className="card card__voting">
@@ -51,8 +51,14 @@ const VotingCard = ({ word, onVote, isLoading, voteHistory, onUpdateVote, handle
         </div>
       )}
       <div className="card-body gap-md text-center">
-        <h2 className="text-2xl font-bold mb-6">
-          <Link to={`https://dle.rae.es/${word.word}`} target="_blank">{word.word.toUpperCase()}</Link>
+        <h2 className="text-xl font-bold mb-6">
+          <Link
+            to={`https://dle.rae.es/${option.option}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {option.option.toUpperCase()}
+          </Link>
         </h2>
         <p className="text-muted">Indica la dificultad de la palabra. Puedes pulsar sobre la palabra para ver su significado en el diccionario.</p>
         <div className="flex flex-col gap-xs">

@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Word, Vote } from '../types'
+import type { Option, Vote } from '../types'
 
 /**
  * Obtiene el historial de votos del usuario con paginación
@@ -9,9 +9,9 @@ export async function getVoteHistory(
   page: number = 1,
   pageSize: number = 10,
   searchQuery: string = '',
-  difficultyFilter: 'all' | 'easy' | 'difficult' | 'not_exist' = 'all'
+  filterSelection: 'all' | 'easy' | 'difficult' | 'not_exist' = 'all'
 ): Promise<{
-  votes: (Vote & { word: Word })[]
+  votes: (Vote & { option: Option })[]
   total: number
 }> {
   try {
@@ -23,60 +23,60 @@ export async function getVoteHistory(
       .from('votes')
       .select(`
         *,
-        word:words(*)
+        option:options(*)
       `)
       .eq('user_id', userId)
 
     // Apply search filter if provided
     if (searchQuery) {
-      // First get the word IDs that match the search
-      const { data: matchingWords, error: wordError } = await supabase
-        .from('words')
+      // First get the option IDs that match the search
+      const { data: matchingOptions, error: optionError } = await supabase
+        .from('options')
         .select('id')
-        .ilike('word', `%${searchQuery}%`)
+        .ilike('option', `%${searchQuery}%`)
 
-      if (wordError) throw wordError
+      if (optionError) throw optionError
 
-      // Then filter votes by those word IDs
-      if (matchingWords && matchingWords.length > 0) {
-        const wordIds = matchingWords.map(w => w.id)
-        query = query.in('word_id', wordIds)
+      // Then filter votes by those option IDs
+      if (matchingOptions && matchingOptions.length > 0) {
+        const optionIds = matchingOptions.map(w => w.id)
+        query = query.in('option_id', optionIds)
       } else {
-        // If no matching words, return empty result
+        // If no matching options, return empty result
         return { votes: [], total: 0 }
       }
     }
 
-    // Apply difficulty filter if not 'all'
-    if (difficultyFilter !== 'all') {
-      query = query.eq('difficult', difficultyFilter)
+    // Apply filter filter if not 'all'
+    if (filterSelection !== 'all') {
+      query = query.eq('filter', filterSelection)
     }
 
     // Get total count with the same filters
     let countQuery = supabase
       .from('votes')
-      .select('*, word:words(*)', { count: 'exact', head: true })
+      .select('*, option:options(*)', { count: 'exact', head: true })
       .eq('user_id', userId)
 
     if (searchQuery) {
-      // Use the same word IDs for the count query
-      const { data: matchingWords, error: wordError } = await supabase
-        .from('words')
+      // Use the same option IDs for the count query
+      const { data: matchingOptions, error: optionError } = await supabase
+        .from('options')
         .select('id')
-        .ilike('word', `%${searchQuery}%`)
+        .ilike('option', `%${searchQuery}%`)
 
-      if (wordError) throw wordError
+      if (optionError) throw optionError
 
-      if (matchingWords && matchingWords.length > 0) {
-        const wordIds = matchingWords.map(w => w.id)
-        countQuery = countQuery.in('word_id', wordIds)
+      if (matchingOptions && matchingOptions.length > 0) {
+        const optionIds = matchingOptions.map(w => w.id)
+        countQuery = countQuery.in('option_id', optionIds)
       } else {
         return { votes: [], total: 0 }
       }
     }
 
-    if (difficultyFilter !== 'all') {
-      countQuery = countQuery.eq('difficult', difficultyFilter)
+    if (filterSelection !== 'all') {
+      countQuery = countQuery.eq('filter', filterSelection)
     }
 
     const { count, error: countError } = await countQuery
@@ -100,9 +100,9 @@ export async function getVoteHistory(
   }
 }
 
-interface UnvotedWordResult {
+interface UnvotedOptionResult {
   id: number
-  word: string
+  option: string
   total: number
   created_at: string
 }
@@ -110,23 +110,23 @@ interface UnvotedWordResult {
 /**
  * Obtiene palabras que el usuario aún no ha votado
  */
-export async function getUnvotedWords(
+export async function getUnvotedOptions(
   userId: string,
   page: number = 1,
   pageSize: number = 10,
   searchQuery: string = ''
 ): Promise<{
-  words: Word[]
+  options: Option[]
   total: number
 }> {
   try {
     const { data, error } = await supabase
-      .rpc('get_unvoted_words', {
+      .rpc('get_unvoted_options', {
         p_user_id: userId,
         p_search_query: searchQuery,
         p_page: page,
         p_page_size: pageSize
-      }) as { data: UnvotedWordResult[] | null, error: Error | null }
+      }) as { data: UnvotedOptionResult[] | null, error: Error | null }
 
     if (error) {
       console.error('Error al obtener palabras no votadas:', error)
@@ -134,25 +134,26 @@ export async function getUnvotedWords(
     }
 
     if (!data || data.length === 0) {
-      return { words: [], total: 0 }
+      return { options: [], total: 0 }
     }
 
     // El total viene en el primer registro
     const total = data[0].total || 0
 
-    // Convertir los datos al formato Word
-    const words: Word[] = data.map(item => ({
+    // Convertir los datos al formato Option
+    const options: Option[] = data.map(item => ({
       id: item.id,
-      word: item.word,
-      created_at: item.created_at
+      option: item.option,
+      created_at: item.created_at,
+      poll_id: 1
     }))
 
     return {
-      words,
+      options,
       total
     }
   } catch (err) {
-    console.error('Error en getUnvotedWords:', err)
+    console.error('Error en getUnvotedOptions:', err)
     throw err
   }
 }
@@ -160,12 +161,12 @@ export async function getUnvotedWords(
 /**
  * Actualiza un voto existente
  */
-export async function updateVote(userId: string, wordId: number, difficult: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
+export async function updateVote(userId: string, optionId: number, filter: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
   const { data, error } = await supabase
     .from('votes')
-    .update({ difficult })
+    .update({ filter })
     .eq('user_id', userId)
-    .eq('word_id', wordId)
+    .eq('option_id', optionId)
     .select()
     .single()
 

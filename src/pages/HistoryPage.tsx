@@ -1,25 +1,25 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { getVoteHistory, updateVote, getUnvotedWords } from '../lib/historyService'
-import { submitVote, getWordCounts } from '../lib/wordService'
-import type { Vote, Word, DifficultyFilter } from '../types'
+import { getVoteHistory, updateVote, getUnvotedOptions } from '../lib/historyService'
+import { submitVote, getOptionCounts } from '../lib/optionService'
+import type { Vote, Option, DifficultyFilter } from '../types'
 import { SearchBar } from '../components/SearchBar'
 import { DifficultyFilters } from '../components/DifficultyFilters'
 import { VotesTable } from '../components/VotesTable'
-import { UnvotedWordsTable } from '../components/UnvotedWordsTable'
+import { UnvotedTable } from '../components/UnvotedTable'
 import { Pagination } from '../components/Pagination'
 import filterIcon from '../assets/filter-icon.svg'
 
-interface VoteWithWord extends Vote {
-  word: Word
+interface VoteWithOption extends Vote {
+  option: Option
 }
 
 const HistoryPage = () => {
   const { user, isAuthenticated, isCheckingUser } = useAuth()
   const navigate = useNavigate()
-  const [votes, setVotes] = useState<VoteWithWord[]>([])
-  const [unvotedWords, setUnvotedWords] = useState<Word[]>([])
+  const [votes, setVotes] = useState<VoteWithOption[]>([])
+  const [unvotedOptions, setUnvotedOptions] = useState<Option[]>([])
   const [showUnvoted, setShowUnvoted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -29,15 +29,15 @@ const HistoryPage = () => {
   const [dataLoaded, setDataLoaded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all')
+  const [filterSelection, setDifficultyFilter] = useState<DifficultyFilter>('all')
   const [showFilters, setShowFilters] = useState(false)
-  const [wordCounts, setWordCounts] = useState({
+  const [optionCounts, setOptionCounts] = useState({
     voted: 0,
     unvoted: 0,
     total: 0,
-    easyWords: 0,
-    difficultWords: 0,
-    notExistWords: 0
+    easyOptions: 0,
+    difficultOptions: 0,
+    notExistOptions: 0
   })
   const pageSize = 10
 
@@ -48,7 +48,7 @@ const HistoryPage = () => {
     }
   }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded])
 
-  // Load votes or unvoted words
+  // Load votes or unvoted options
   useEffect(() => {
     if (!user) return
 
@@ -61,11 +61,11 @@ const HistoryPage = () => {
 
       try {
         if (showUnvoted) {
-          const { words, total } = await getUnvotedWords(user.id, currentPage, pageSize, searchQuery)
-          setUnvotedWords(words)
+          const { options, total } = await getUnvotedOptions(user.id, currentPage, pageSize, searchQuery)
+          setUnvotedOptions(options)
           setTotalVotes(total)
         } else {
-          const { votes: newVotes, total } = await getVoteHistory(user.id, currentPage, pageSize, searchQuery, difficultyFilter)
+          const { votes: newVotes, total } = await getVoteHistory(user.id, currentPage, pageSize, searchQuery, filterSelection)
           setVotes(newVotes)
           setTotalVotes(total)
         }
@@ -80,38 +80,38 @@ const HistoryPage = () => {
     }
 
     loadData()
-  }, [user, currentPage, searchQuery, difficultyFilter, showUnvoted])
+  }, [user, currentPage, searchQuery, filterSelection, showUnvoted])
 
-  // Load word counts
+  // Load option counts
   useEffect(() => {
     if (!user) return
 
-    const loadWordCounts = async () => {
+    const loadOptionCounts = async () => {
       try {
-        const counts = await getWordCounts(user.id)
-        setWordCounts(counts)
+        const counts = await getOptionCounts(user.id)
+        setOptionCounts(counts)
       } catch (err) {
         console.error('Error al cargar conteos de palabras:', err)
       }
     }
 
-    loadWordCounts()
+    loadOptionCounts()
   }, [user])
 
-  const handleUpdateVote = async (wordId: number, newDifficulty: 'easy' | 'difficult' | 'not_exist') => {
+  const handleUpdateVote = async (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      await updateVote(user.id, wordId, newDifficulty)
+      await updateVote(user.id, optionId, newFilter)
 
       // Update the vote in the local state
       setVotes(prevVotes =>
         prevVotes.map(vote =>
-          vote.word_id === wordId
-            ? { ...vote, difficult: newDifficulty }
+          vote.option_id === optionId
+            ? { ...vote, filter: newFilter }
             : vote
         )
       )
@@ -123,8 +123,8 @@ const HistoryPage = () => {
     }
   }
 
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
+  const getDifficultyText = (filter: 'easy' | 'difficult' | 'not_exist') => {
+    switch (filter) {
       case 'easy':
         return 'Fácil'
       case 'difficult':
@@ -132,7 +132,7 @@ const HistoryPage = () => {
       case 'not_exist':
         return 'No existe'
       default:
-        return difficulty
+        return filter
     }
   }
 
@@ -143,7 +143,7 @@ const HistoryPage = () => {
 
   const handleSearch = () => {
     setSearchQuery(searchInput)
-    setCurrentPage(1) // Reset to first page when searching
+    setCurrentPage(1)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -163,22 +163,22 @@ const HistoryPage = () => {
     setCurrentPage(1) // Reset to first page when changing filter
   }
 
-  const handleVote = async (wordId: number, difficult: 'easy' | 'difficult' | 'not_exist') => {
+  const handleVote = async (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      await submitVote(user.id, wordId, difficult)
+      await submitVote(user.id, optionId, filter)
 
-      // Get updated word counts
-      const counts = await getWordCounts(user.id)
-      setWordCounts(counts)
+      // Get updated option counts
+      const counts = await getOptionCounts(user.id)
+      setOptionCounts(counts)
 
       // Get updated data
-      const { words, total } = await getUnvotedWords(user.id, currentPage, pageSize, searchQuery)
-      setUnvotedWords(words)
+      const { options, total } = await getUnvotedOptions(user.id, currentPage, pageSize, searchQuery)
+      setUnvotedOptions(options)
       setTotalVotes(total)
 
       if (total === 0) {
@@ -231,27 +231,27 @@ const HistoryPage = () => {
     setShowFilters(!showFilters)
   }
 
-  const showClearButton = searchInput.length > 0 || difficultyFilter !== 'all'
+  const showClearButton = searchInput.length > 0 || filterSelection !== 'all'
 
   const getCompletionPercentage = () => {
     if (showUnvoted) {
-      return wordCounts.total > 0
-        ? Number((wordCounts.unvoted / wordCounts.total) * 100).toFixed(2)
+      return optionCounts.total > 0
+        ? Number((optionCounts.unvoted / optionCounts.total) * 100).toFixed(2)
         : 0
     } else {
-      if (difficultyFilter === 'all') {
-        return wordCounts.total > 0
-          ? Number(((wordCounts.voted / wordCounts.total) * 100).toFixed(2))
+      if (filterSelection === 'all') {
+        return optionCounts.total > 0
+          ? Number(((optionCounts.voted / optionCounts.total) * 100).toFixed(2))
           : 0
       } else {
-        const filteredCount = difficultyFilter === 'easy'
-          ? wordCounts.easyWords
-          : difficultyFilter === 'difficult'
-            ? wordCounts.difficultWords
-            : wordCounts.notExistWords
+        const filteredCount = filterSelection === 'easy'
+          ? optionCounts.easyOptions
+          : filterSelection === 'difficult'
+            ? optionCounts.difficultOptions
+            : optionCounts.notExistOptions
 
-        return wordCounts.voted > 0
-          ? Number((filteredCount / wordCounts.voted) * 100).toFixed(2)
+        return optionCounts.voted > 0
+          ? Number((filteredCount / optionCounts.voted) * 100).toFixed(2)
           : 0
       }
     }
@@ -301,7 +301,7 @@ const HistoryPage = () => {
                 <div className="flex gap-2xs">
                   {!showUnvoted && (
                     <DifficultyFilters
-                      currentFilter={difficultyFilter}
+                      currentFilter={filterSelection}
                       onFilterChange={handleDifficultyFilter}
                       isLoading={isLoading}
                     />
@@ -347,9 +347,9 @@ const HistoryPage = () => {
 
               <div>
                 {showUnvoted ? (
-                  unvotedWords.length > 0 ? (
-                    <UnvotedWordsTable
-                      words={unvotedWords}
+                  unvotedOptions.length > 0 ? (
+                    <UnvotedTable
+                      options={unvotedOptions}
                       isLoading={isLoading}
                       onVote={handleVote}
                     />
@@ -396,12 +396,12 @@ const HistoryPage = () => {
                     <strong>{totalVotes}</strong>
                     {showUnvoted
                           ? ' palabras sin votar'
-                          : difficultyFilter === 'all'
+                          : filterSelection === 'all'
                             ? ' palabras votadas'
-                            : ` de las votadas (${getDifficultyText(difficultyFilter)})`
+                            : ` de las votadas (${getDifficultyText(filterSelection)})`
                         }
                     {' '}
-                    {wordCounts.total > 0 && (
+                    {optionCounts.total > 0 && (
                       <span className="ml-2">
                         <strong>({completionPercentage}%)</strong>
                       </span>

@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom'
-import type { Vote, Word } from '../types'
+import type { Vote, Option } from '../types'
 
-interface VoteWithWord extends Vote {
-  word: Word
+interface VoteWithOption extends Vote {
+  option: Option
 }
 
 interface VotesTableProps {
-  votes: VoteWithWord[]
+  votes: VoteWithOption[]
   isLoading: boolean
-  onUpdateVote: (wordId: number, difficulty: 'easy' | 'difficult' | 'not_exist') => void
-  getDifficultyText: (difficulty: string) => string
+  onUpdateVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => void
+  getDifficultyText: (filter: 'easy' | 'difficult' | 'not_exist') => string
 }
 
 export const VotesTable = ({
@@ -32,13 +32,13 @@ export const VotesTable = ({
           <tr key={vote.id}>
             <td className="p-3xs">
               <h3 className="text-xl font-bold mb-6">
-                {vote.word ? (
+                {vote.option ? (
                   <Link
-                    to={`https://dle.rae.es/${vote.word.word}`}
+                    to={`https://dle.rae.es/${vote.option.option}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {vote.word.word.toUpperCase()}
+                    {vote.option.option.toUpperCase()}
                   </Link>
                 ) : (
                   <span className="text-muted">Palabra no encontrada</span>
@@ -58,22 +58,22 @@ export const VotesTable = ({
             <td className="p-3xs">
               <div className="flex gap-2xs">
                 <button
-                  className={`btn btn-rg btn-success ${getDifficultyText(vote.difficult) === 'Fácil' ? 'prev-vote' : ''}`}
-                  onClick={() => onUpdateVote(vote.word_id, 'easy')}
+                  className={`btn btn-rg btn-success ${getDifficultyText(vote.filter) === 'Fácil' ? 'prev-vote' : ''}`}
+                  onClick={() => onUpdateVote(vote.option_id, 'easy')}
                   disabled={isLoading}
                 >
                   <strong>F</strong>
                 </button>
                 <button
-                  className={`btn btn-rg btn-error ${getDifficultyText(vote.difficult) === 'Difícil' ? 'prev-vote' : ''}`}
-                  onClick={() => onUpdateVote(vote.word_id, 'difficult')}
+                  className={`btn btn-rg btn-error ${getDifficultyText(vote.filter) === 'Difícil' ? 'prev-vote' : ''}`}
+                  onClick={() => onUpdateVote(vote.option_id, 'difficult')}
                   disabled={isLoading}
                 >
                   <strong>D</strong>
                 </button>
                 <button
-                  className={`btn btn-rg btn-tertiary ${getDifficultyText(vote.difficult) === 'No existe' ? 'prev-vote' : ''}`}
-                  onClick={() => onUpdateVote(vote.word_id, 'not_exist')}
+                  className={`btn btn-rg btn-tertiary ${getDifficultyText(vote.filter) === 'No existe' ? 'prev-vote' : ''}`}
+                  onClick={() => onUpdateVote(vote.option_id, 'not_exist')}
                   disabled={isLoading}
                 >
                   <strong>N</strong>

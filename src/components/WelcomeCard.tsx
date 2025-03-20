@@ -1,34 +1,34 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
-import { getWordCounts } from '../lib/wordService'
-import WordStats from './WordStats'
+import { getOptionCounts } from '../lib/optionService'
+import OptionStats from './OptionStats'
 
 const AuthenticatedContent = () => {
   const { user } = useAuth()
-  const [wordCounts, setWordCounts] = useState({
+  const [optionCounts, setOptionCounts] = useState({
     voted: 0,
     unvoted: 0,
     total: 0,
-    easyWords: 0,
-    difficultWords: 0,
-    notExistWords: 0
+    easyOptions: 0,
+    difficultOptions: 0,
+    notExistOptions: 0
   })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (user) {
-      loadWordCounts()
+      loadOptionCounts()
     }
   }, [user])
 
-  const loadWordCounts = async () => {
+  const loadOptionCounts = async () => {
     if (!user) return
 
     setIsLoading(true)
     try {
-      const counts = await getWordCounts(user.id)
-      setWordCounts(counts)
+      const counts = await getOptionCounts(user.id)
+      setOptionCounts(counts)
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
     } finally {
@@ -53,8 +53,8 @@ const AuthenticatedContent = () => {
           <div className="bg-blue-50 p-4 rounded-md mb-6">
             <h4 className="mt-sm mb-sm">Progreso</h4>
 
-            <WordStats
-              wordCounts={wordCounts}
+            <OptionStats
+              optionCounts={optionCounts}
               showDetailedStats={false}
               className="mt-4"
             />
@@ -66,7 +66,7 @@ const AuthenticatedContent = () => {
             Ver listado de votos
           </Link>
           <Link to="/vote" className="btn btn-primary w-100">
-            {wordCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
+            {optionCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
           </Link>
         </div>
         <p className="text-muted text-small text-right">© Manuel Atance 2025</p>

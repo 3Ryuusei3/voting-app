@@ -2,27 +2,27 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import VotingCard from '../components/VotingCard'
-import WordStats from '../components/WordStats'
-import { getUnvotedWords, submitVote, getWordCounts, updateVote } from '../lib/wordService'
-import type { VoteHistory, Word } from '../types'
+import OptionStats from '../components/OptionStats'
+import { getUnvotedOptions, submitVote, getOptionCounts, updateVote } from '../lib/optionService'
+import type { VoteHistory, Option } from '../types'
 
 const VotePage = () => {
   const { user, isAuthenticated, isCheckingUser } = useAuth()
   const navigate = useNavigate()
-  const [words, setWords] = useState<Word[]>([])
+  const [options, setOptions] = useState<Option[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [wordCounts, setWordCounts] = useState({
+  const [optionCounts, setOptionCounts] = useState({
     voted: 0,
     unvoted: 0,
     total: 0,
-    easyWords: 0,
-    difficultWords: 0,
-    notExistWords: 0
+    easyOptions: 0,
+    difficultOptions: 0,
+    notExistOptions: 0
   })
   const [dataLoaded, setDataLoaded] = useState(false)
   const [voteHistory, setVoteHistory] = useState<VoteHistory[]>([])
-  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [currentOptionIndex, setCurrentOptionIndex] = useState(0)
 
   // Redirigir si el usuario no está autenticado
   useEffect(() => {
@@ -31,29 +31,29 @@ const VotePage = () => {
     }
   }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded])
 
-  const loadWordCounts = useCallback(async () => {
+  const loadOptionCounts = useCallback(async () => {
     if (!user) return
 
     try {
-      const counts = await getWordCounts(user.id)
-      setWordCounts(counts)
+      const counts = await getOptionCounts(user.id)
+      setOptionCounts(counts)
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
     }
   }, [user])
 
-  const loadWords = useCallback(async () => {
+  const loadOptions = useCallback(async () => {
     if (!user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const unvotedWords = await getUnvotedWords(user.id, 500)
-      setWords(unvotedWords)
+      const unvotedOptions = await getUnvotedOptions(user.id, 500)
+      setOptions(unvotedOptions)
 
-      // If we didn't get any words, show a message
-      if (unvotedWords.length === 0) {
+      // If we didn't get any options, show a message
+      if (unvotedOptions.length === 0) {
         setError('No hay más palabras disponibles para votar en este momento. Es posible que hayas votado todas las palabras disponibles o que estemos experimentando problemas técnicos.')
       }
     } catch (err) {
@@ -68,36 +68,36 @@ const VotePage = () => {
   // Cargar palabras no votadas y conteos
   useEffect(() => {
     if (user && !dataLoaded) {
-      loadWords()
-      loadWordCounts()
+      loadOptions()
+      loadOptionCounts()
     }
-  }, [user, dataLoaded, loadWords, loadWordCounts])
+  }, [user, dataLoaded, loadOptions, loadOptionCounts])
 
-  const handleVote = async (wordId: number, difficult: 'easy' | 'difficult' | 'not_exist') => {
+  const handleVote = async (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const word = words.find(w => w.id === wordId)
-      if (!word) throw new Error('Word not found')
+      const option = options.find(w => w.id === optionId)
+      if (!option) throw new Error('Option not found')
 
       // Add to history before submitting vote
-      setVoteHistory(prev => [...prev, { ...word, difficulty: difficult }])
+      setVoteHistory(prev => [...prev, { ...option, filter: filter }])
 
-      await submitVote(user.id, wordId, difficult)
+      await submitVote(user.id, optionId, filter)
 
       // Actualizar conteos
-      await loadWordCounts()
+      await loadOptionCounts()
 
       // Pasar a la siguiente palabra
-      setCurrentWordIndex(prev => prev + 1)
+      setCurrentOptionIndex(prev => prev + 1)
 
       // Si llegamos al final del array, cargar más palabras
-      if (currentWordIndex >= words.length - 1) {
-        await loadWords()
-        setCurrentWordIndex(0)
+      if (currentOptionIndex >= options.length - 1) {
+        await loadOptions()
+        setCurrentOptionIndex(0)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al registrar el voto'
@@ -116,10 +116,10 @@ const VotePage = () => {
 
     try {
       // Volver a la palabra anterior sin modificar el listado
-      setCurrentWordIndex(prev => Math.max(0, prev - 1))
+      setCurrentOptionIndex(prev => Math.max(0, prev - 1))
 
       // Update counts
-      await loadWordCounts()
+      await loadOptionCounts()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al deshacer el voto'
       setError(errorMessage)
@@ -129,34 +129,34 @@ const VotePage = () => {
     }
   }
 
-  const handleUpdateVote = async (wordId: number, newDifficulty: 'easy' | 'difficult' | 'not_exist') => {
+  const handleUpdateVote = async (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => {
     if (!user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      await updateVote(user.id, wordId, newDifficulty)
+      await updateVote(user.id, optionId, newFilter)
 
       // Update the vote in history
       setVoteHistory(prev =>
         prev.map(vote =>
-          vote.id === wordId
-            ? { ...vote, difficulty: newDifficulty }
+          vote.id === optionId
+            ? { ...vote, filter: newFilter }
             : vote
         )
       )
 
       // Update counts
-      await loadWordCounts()
+      await loadOptionCounts()
 
       // Pasar a la siguiente palabra
-      setCurrentWordIndex(prev => prev + 1)
+      setCurrentOptionIndex(prev => prev + 1)
 
       // Si llegamos al final del array, cargar más palabras
-      if (currentWordIndex >= words.length - 1) {
-        await loadWords()
-        setCurrentWordIndex(0)
+      if (currentOptionIndex >= options.length - 1) {
+        await loadOptions()
+        setCurrentOptionIndex(0)
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el voto'
@@ -168,7 +168,7 @@ const VotePage = () => {
   }
 
   // Si no hay palabras para votar
-  if (words.length === 0 && !isLoading && dataLoaded) {
+  if (options.length === 0 && !isLoading && dataLoaded) {
     return (
       <div className="container">
         <div className="card max-w-md w-full mx-auto">
@@ -177,7 +177,7 @@ const VotePage = () => {
             <p className="text-muted mb-6">Vuelve más tarde para votar nuevas palabras.</p>
             <div className="mb-6">
               <p className="font-medium mb-2">Estadísticas:</p>
-              <WordStats wordCounts={wordCounts} />
+              <OptionStats optionCounts={optionCounts} />
             </div>
             <button
               className="btn btn-primary"
@@ -199,10 +199,10 @@ const VotePage = () => {
         </div>
       )}
 
-      {words.length > 0 && (
+      {options.length > 0 && (
         <div className="flex flex-col align-center gap-md w-100">
           <VotingCard
-            word={words[currentWordIndex]}
+            option={options[currentOptionIndex]}
             onVote={handleVote}
             isLoading={isLoading}
             voteHistory={voteHistory}
@@ -213,18 +213,18 @@ const VotePage = () => {
             <div className="mx-auto mb-4">
               <div className="flex justify-between gap-sm">
                 <div className="flex items-center gap-sm">
-                  <span className="text-small">Difíciles: {wordCounts.difficultWords}</span>
+                  <span className="text-small">Difíciles: {optionCounts.difficultOptions}</span>
                 </div>
                 <div className="flex items-center gap-sm">
-                  <span className="text-small">Fáciles: {wordCounts.easyWords}</span>
+                  <span className="text-small">Fáciles: {optionCounts.easyOptions}</span>
                 </div>
                 <div className="flex items-center gap-sm">
-                  <span className="text-small">No existen: {wordCounts.notExistWords}</span>
+                  <span className="text-small">No existen: {optionCounts.notExistOptions}</span>
                 </div>
               </div>
 
-              <WordStats
-                wordCounts={wordCounts}
+              <OptionStats
+                optionCounts={optionCounts}
                 showDetailedStats={false}
                 className="mt-2"
               />
@@ -233,7 +233,7 @@ const VotePage = () => {
         </div>
       )}
 
-      {isLoading && words.length === 0 && (
+      {isLoading && options.length === 0 && (
         <div className="flex items-center justify-center">
           <p className="text-muted text-large">Cargando palabras...</p>
         </div>

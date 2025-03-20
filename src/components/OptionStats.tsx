@@ -1,23 +1,23 @@
-interface WordStatsProps {
-  wordCounts: {
+interface OptionStatsProps {
+  optionCounts: {
     voted: number
     unvoted: number
     total: number
-    easyWords: number
-    difficultWords: number
-    notExistWords: number
+    easyOptions: number
+    difficultOptions: number
+    notExistOptions: number
   }
   showDetailedStats?: boolean
   className?: string
 }
 
-const WordStats = ({
-  wordCounts,
+const OptionStats = ({
+  optionCounts,
   showDetailedStats = true,
   className = ''
-}: WordStatsProps) => {
-  const totalProgressPercentage = wordCounts.total > 0
-    ? Math.floor((wordCounts.voted / wordCounts.total) * 100)
+}: OptionStatsProps) => {
+  const totalProgressPercentage = optionCounts.total > 0
+    ? Math.floor((optionCounts.voted / optionCounts.total) * 100)
     : 0
 
   return (
@@ -39,20 +39,20 @@ const WordStats = ({
             {totalProgressPercentage <= 5 && (
               <p>{totalProgressPercentage}%</p>
             )}
-            <p className="ml-auto">{wordCounts.voted} de {wordCounts.total} palabras</p>
+            <p className="ml-auto">{optionCounts.voted} de {optionCounts.total} palabras</p>
           </div>
       </div>
 
       {showDetailedStats && (
         <div className="mt-4">
-          <p>Has votado {wordCounts.voted} de {wordCounts.total} palabras totales.</p>
-          <p>Palabras difíciles: {wordCounts.difficultWords}</p>
-          <p>Palabras fáciles: {wordCounts.easyWords}</p>
-          <p>Palabras que no existen: {wordCounts.notExistWords}</p>
+          <p>Has votado {optionCounts.voted} de {optionCounts.total} palabras totales.</p>
+          <p>Palabras difíciles: {optionCounts.difficultOptions}</p>
+          <p>Palabras fáciles: {optionCounts.easyOptions}</p>
+          <p>Palabras que no existen: {optionCounts.notExistOptions}</p>
         </div>
       )}
     </div>
   )
 }
 
-export default WordStats
+export default OptionStats

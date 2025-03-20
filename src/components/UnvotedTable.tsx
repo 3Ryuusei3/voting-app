@@ -1,17 +1,21 @@
 import { Link } from 'react-router-dom'
-import type { Word } from '../types'
+import type { Option } from '../types'
 
-interface UnvotedWordsTableProps {
-  words: Word[]
+interface UnvotedTableProps {
+  options: Option[]
   isLoading: boolean
-  onVote: (wordId: number, difficulty: 'easy' | 'difficult' | 'not_exist') => void
+  onVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => void
 }
 
-export const UnvotedWordsTable = ({
-  words,
+export const UnvotedTable = ({
+  options,
   isLoading,
   onVote
-}: UnvotedWordsTableProps) => {
+}: UnvotedTableProps) => {
+  if (!options || options.length === 0) {
+    return null
+  }
+
   return (
     <table className="w-100">
       <thead>
@@ -21,16 +25,16 @@ export const UnvotedWordsTable = ({
         </tr>
       </thead>
       <tbody>
-        {words.map((word) => (
-          <tr key={word.id} className="border-b border-clr-border">
+        {options.map((option) => (
+          <tr key={option.id} className="border-b border-clr-border">
             <td className="p-3xs">
               <h3 className="text-xl font-bold mb-6">
                 <Link
-                  to={`https://dle.rae.es/${word.word}`}
+                  to={`https://dle.rae.es/${option.option}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {word.word.toUpperCase()}
+                  {option.option.toUpperCase()}
                 </Link>
               </h3>
             </td>
@@ -38,21 +42,21 @@ export const UnvotedWordsTable = ({
               <div className="flex gap-2xs">
                 <button
                   className="btn btn-rg btn-success"
-                  onClick={() => onVote(word.id, 'easy')}
+                  onClick={() => onVote(option.id, 'easy')}
                   disabled={isLoading}
                 >
                   <strong>F</strong>
                 </button>
                 <button
                   className="btn btn-rg btn-error"
-                  onClick={() => onVote(word.id, 'difficult')}
+                  onClick={() => onVote(option.id, 'difficult')}
                   disabled={isLoading}
                 >
                   <strong>D</strong>
                 </button>
                 <button
                   className="btn btn-rg btn-tertiary"
-                  onClick={() => onVote(word.id, 'not_exist')}
+                  onClick={() => onVote(option.id, 'not_exist')}
                   disabled={isLoading}
                 >
                   <strong>N</strong>
