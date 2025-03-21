@@ -3,8 +3,8 @@
 
 :root {
   // Colors - Dark Mode
-  --clr-primary: #6e33f9;
-  --clr-secondary: #3e2277;
+  --clr-primary: #753afe;
+  --clr-secondary: #462783;
   --clr-tertiary: #1d0d3e;
   --clr-accent: #ffcd57;
   --clr-accent-dark: #e6b84d;
@@ -361,6 +361,14 @@ table {
   padding: var(--space-xl);
 }
 
+.pl-md {
+  padding-left: var(--space-md);
+}
+
+.pr-md {
+  padding-right: var(--space-md);
+}
+
 // Text utilities
 .text-center {
   text-align: center;
@@ -675,6 +683,10 @@ table {
     max-width: unset;
   }
 
+  &__option {
+    background-color: var(--clr-background);
+  }
+
   &__voting {
     margin-top: 6vh;
   }
@@ -706,41 +718,11 @@ table {
 
 .card-info {
   text-align: left;
-  background-color: var(--clr-surface-variant);
-  padding: var(--space-md);
-  border: 1px solid var(--clr-border);
-  border-radius: var(--radius-md);
-
-  ol {
-    padding-left: var(--space-lg);
-
-    li {
-      margin-bottom: var(--space-md);
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      p {
-        line-height: 1.5;
-
-        &:first-child {
-          font-weight: var(--fw-medium);
-          color: var(--clr-text);
-        }
-
-        em {
-          color: var(--clr-accent);
-          font-style: italic;
-          font-weight: var(--fw-regular);
-          display: block;
-          margin-top: var(--space-xs);
-          padding-left: var(--space-md);
-          border-left: 2px solid var(--clr-accent);
-        }
-      }
-    }
-  }
+  margin-block: var(--space-xs);
+  padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-md);
+  font-size: var(--fs-small);
+  color: var(--clr-text-secondary);
+  border-left: 1px solid var(--clr-border);
 }
 
 .undo-btn {
