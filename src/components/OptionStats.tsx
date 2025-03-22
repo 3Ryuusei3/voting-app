@@ -36,7 +36,7 @@ const OptionStats = ({
             {totalProgressPercentage <= 5 && (
               <p>{totalProgressPercentage}%</p>
             )}
-            <p className="ml-auto">{optionCounts.voted} de {optionCounts.total} palabras</p>
+            <p className="ml-auto">{optionCounts.voted} de {optionCounts.total} por votar</p>
           </div>
       </div>
 

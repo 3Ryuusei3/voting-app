@@ -87,3 +87,26 @@ export async function getUserPolls(userId: string): Promise<PollWithPermission[]
     throw error
   }
 }
+
+/**
+ * Obtiene una encuesta por su ID
+ */
+export async function getPollById(pollId: number) {
+  try {
+    const { data, error } = await supabase
+      .from('polls')
+      .select('id, name, description, url')
+      .eq('id', pollId)
+      .single()
+
+    if (error) {
+      console.error('Error al obtener encuesta:', error)
+      throw error
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error en getPollById:', error)
+    throw error
+  }
+}

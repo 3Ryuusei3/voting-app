@@ -10,13 +10,15 @@ interface VotesTableProps {
   isLoading: boolean
   onUpdateVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => void
   getDifficultyText: (filter: 'easy' | 'difficult' | 'not_exist') => string
+  pollUrl: string | null
 }
 
 export const VotesTable = ({
   votes,
   isLoading,
   onUpdateVote,
-  getDifficultyText
+  getDifficultyText,
+  pollUrl
 }: VotesTableProps) => {
   return (
     <table className="w-100">
@@ -31,10 +33,10 @@ export const VotesTable = ({
         {votes.map((vote) => (
           <tr key={vote.id}>
             <td className="p-3xs">
-              <h3 className="text-xl font-bold mb-6">
+              <h4 className="text-xl font-bold option-title">
                 {vote.option ? (
                   <Link
-                    to={`https://dle.rae.es/${vote.option.option}`}
+                    to={pollUrl ? `${pollUrl}${vote.option.option}` : ``}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -43,7 +45,7 @@ export const VotesTable = ({
                 ) : (
                   <span className="text-muted">Palabra no encontrada</span>
                 )}
-              </h3>
+              </h4>
             </td>
             <td className="time-cell text-extra-small">
               {new Date(vote.created_at).toLocaleTimeString('es-ES', {
@@ -76,7 +78,7 @@ export const VotesTable = ({
                   onClick={() => onUpdateVote(vote.option_id, 'not_exist')}
                   disabled={isLoading}
                 >
-                  <strong>N</strong>
+                  <strong>E</strong>
                 </button>
               </div>
             </td>

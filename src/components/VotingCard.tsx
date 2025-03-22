@@ -9,9 +9,10 @@ interface VotingCardProps {
   voteHistory?: VoteHistory[]
   onUpdateVote: (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
   handleUndo: () => Promise<void>
+  pollUrl: string | null
 }
 
-const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, handleUndo }: VotingCardProps) => {
+const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, handleUndo, pollUrl }: VotingCardProps) => {
   const [localLoading, setLocalLoading] = useState(false)
 
   const handleVote = async (filter: 'easy' | 'difficult' | 'not_exist') => {
@@ -53,14 +54,14 @@ const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, hand
       <div className="card-body gap-md text-center">
         <h2 className="text-xl font-bold mb-6">
           <Link
-            to={`https://dle.rae.es/${option.option}`}
+            to={pollUrl ? `${pollUrl}${option.option}` : ``}
             target="_blank"
             rel="noopener noreferrer"
           >
             {option.option.toUpperCase()}
           </Link>
         </h2>
-        <p className="text-muted">Indica la dificultad de la palabra. Puedes pulsar sobre la palabra para ver su significado en el diccionario.</p>
+        <p className="text-muted">Indica si conoces la opción mostrada. Puedes pulsar sobre el título para encontrar más información.</p>
         <div className="flex flex-col gap-xs">
           <div className="button-group flex flex-col justify-center gap-xs">
             <div className="flex flex-col gap-xs">
@@ -69,8 +70,8 @@ const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, hand
                 onClick={() => handleVote('not_exist')}
                 disabled={isLoading || localLoading}
               >
-                <span>NO EXISTE</span>
-                <span>🤷‍♂️</span>
+                <span>ELIMINAR</span>
+                <span>🗑️</span>
               </button>
               <button
                 className={`btn btn-lg btn-error w-100 ${checkPreviousVote('difficult') ? 'prev-vote' : ''} flex align-center gap-sm`}

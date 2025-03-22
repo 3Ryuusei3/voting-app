@@ -370,6 +370,10 @@ table {
 }
 
 // Text utilities
+.text-italic {
+  font-style: italic;
+}
+
 .text-center {
   text-align: center;
 }
@@ -456,6 +460,10 @@ table {
     color: var(--clr-accent);
     text-decoration: underline;
   }
+}
+
+.option-title {
+  line-height: 0.9;
 }
 
 // Button utilities

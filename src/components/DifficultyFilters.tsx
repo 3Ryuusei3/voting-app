@@ -39,7 +39,7 @@ export const DifficultyFilters = ({
         onClick={() => onFilterChange('not_exist')}
         disabled={isLoading}
       >
-        <strong>N</strong>
+        <strong>E</strong>
       </button>
     </>
   )

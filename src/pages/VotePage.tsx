@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import VotingCard from '../components/VotingCard'
 import OptionStats from '../components/OptionStats'
 import { getUnvotedOptions, submitVote, updateVote, getOptionCounts } from '../lib/optionService'
+import { getPollById } from '../lib/pollsService'
 import type { VoteHistory, Option } from '../types'
 
 const VotePage = () => {
@@ -25,6 +26,22 @@ const VotePage = () => {
   const [dataLoaded, setDataLoaded] = useState(false)
   const [voteHistory, setVoteHistory] = useState<VoteHistory[]>([])
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0)
+  const [pollUrl, setPollUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!pollId) return
+
+    const loadPollUrl = async () => {
+      try {
+        const poll = await getPollById(pollId)
+        setPollUrl(poll.url)
+      } catch (err) {
+        console.error('Error al cargar URL de la encuesta:', err)
+      }
+    }
+
+    loadPollUrl()
+  }, [pollId])
 
   // Redirigir si el usuario no está autenticado o si no hay pollId
   useEffect(() => {
@@ -210,6 +227,7 @@ const VotePage = () => {
             voteHistory={voteHistory}
             onUpdateVote={handleUpdateVote}
             handleUndo={handleUndo}
+            pollUrl={pollUrl}
           />
           <div className="text-center mb-4 w-100 mw-500">
             <div className="mx-auto mb-4">

@@ -37,7 +37,7 @@ const AuthenticatedContent = () => {
     <div className="card">
       <div className="card-body gap-md">
         <h2 className="text-large font-medium">¡Hola, {user?.identities?.[0]?.identity_data?.full_name?.split(' ')[0] ?? user.email}!</h2>
-        <p className="text-muted text-medium">¿Preparado para seguir votando?</p>
+        <p className="text-muted text-small text-italic">🎶 Yo quiero votar, ¡toda la noche!<br/>🎶 Vota, vota, votando, vo. Vota, vota, votando, ¡hey!</p>
         {!isLoading && (
           <>
             {polls.length > 0 && (

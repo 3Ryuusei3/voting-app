@@ -5,12 +5,14 @@ interface UnvotedTableProps {
   options: Option[]
   isLoading: boolean
   onVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => void
+  pollUrl: string | null
 }
 
 export const UnvotedTable = ({
   options,
   isLoading,
-  onVote
+  onVote,
+  pollUrl
 }: UnvotedTableProps) => {
   if (!options || options.length === 0) {
     return null
@@ -28,15 +30,15 @@ export const UnvotedTable = ({
         {options.map((option) => (
           <tr key={option.id} className="border-b border-clr-border">
             <td className="p-3xs">
-              <h3 className="text-xl font-bold mb-6">
+              <h4 className="text-xl font-bold option-title">
                 <Link
-                  to={`https://dle.rae.es/${option.option}`}
+                  to={pollUrl ? `${pollUrl}${option.option}` : ``}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   {option.option.toUpperCase()}
                 </Link>
-              </h3>
+              </h4>
             </td>
             <td className="p-3xs">
               <div className="flex gap-2xs">
@@ -59,7 +61,7 @@ export const UnvotedTable = ({
                   onClick={() => onVote(option.id, 'not_exist')}
                   disabled={isLoading}
                 >
-                  <strong>N</strong>
+                  <strong>E</strong>
                 </button>
               </div>
             </td>

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getVoteHistory, updateVote, getUnvotedOptions, getCachedOptionCounts } from '../lib/historyService'
 import { submitVote } from '../lib/optionService'
+import { getPollById } from '../lib/pollsService'
 import type { Vote, Option, DifficultyFilter } from '../types'
 import { SearchBar } from '../components/SearchBar'
 import { DifficultyFilters } from '../components/DifficultyFilters'
@@ -33,6 +34,7 @@ const HistoryPage = () => {
   const [searchInput, setSearchInput] = useState('')
   const [filterSelection, setDifficultyFilter] = useState<DifficultyFilter>('all')
   const [showFilters, setShowFilters] = useState(false)
+  const [pollUrl, setPollUrl] = useState<string | null>(null)
   const [optionCounts, setOptionCounts] = useState({
     voted: 0,
     unvoted: 0,
@@ -42,6 +44,22 @@ const HistoryPage = () => {
     notExistOptions: 0
   })
   const pageSize = 10
+
+  // Load poll URL
+  useEffect(() => {
+    if (!pollId) return
+
+    const loadPollUrl = async () => {
+      try {
+        const poll = await getPollById(pollId)
+        setPollUrl(poll.url)
+      } catch (err) {
+        console.error('Error al cargar URL de la encuesta:', err)
+      }
+    }
+
+    loadPollUrl()
+  }, [pollId])
 
   // Redirect if not authenticated or no pollId
   useEffect(() => {
@@ -360,6 +378,7 @@ const HistoryPage = () => {
                       options={unvotedOptions}
                       isLoading={isLoading}
                       onVote={handleVote}
+                      pollUrl={pollUrl}
                     />
                   ) : (
                     <div className="text-center p-lg">
@@ -377,6 +396,7 @@ const HistoryPage = () => {
                       isLoading={isLoading}
                       onUpdateVote={handleUpdateVote}
                       getDifficultyText={getDifficultyText}
+                      pollUrl={pollUrl}
                     />
                   ) : (
                     <div className="flex flex-col gap-sm justify-center align-center w-100 p-lg">
@@ -403,10 +423,10 @@ const HistoryPage = () => {
                   <span>
                     <strong>{totalVotes}</strong>
                     {showUnvoted
-                      ? ' palabras sin votar'
+                      ? ' sin votar'
                       : filterSelection === 'all'
-                        ? ' palabras votadas'
-                        : ` de las votadas (${getDifficultyText(filterSelection)})`
+                        ? ' votadas'
+                        : ` votadas - ${getDifficultyText(filterSelection)}`
                     }
                     {' '}
                     <span className="ml-2">
