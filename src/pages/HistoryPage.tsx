@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getVoteHistory, updateVote, getUnvotedOptions, getCachedOptionCounts } from '../lib/historyService'
 import { submitVote } from '../lib/optionService'
@@ -18,6 +18,8 @@ interface VoteWithOption extends Vote {
 const HistoryPage = () => {
   const { user, isAuthenticated, isCheckingUser } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const pollId = Number(searchParams.get('pollId'))
   const [votes, setVotes] = useState<VoteWithOption[]>([])
   const [unvotedOptions, setUnvotedOptions] = useState<Option[]>([])
   const [showUnvoted, setShowUnvoted] = useState(false)
@@ -41,16 +43,16 @@ const HistoryPage = () => {
   })
   const pageSize = 10
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated or no pollId
   useEffect(() => {
-    if (!isAuthenticated && !isCheckingUser && !isLoading && dataLoaded) {
+    if ((!isAuthenticated && !isCheckingUser && !isLoading && dataLoaded) || !pollId) {
       navigate('/')
     }
-  }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded])
+  }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded, pollId])
 
   // Load votes or unvoted options
   useEffect(() => {
-    if (!user) return
+    if (!user || !pollId) return
 
     const loadData = async () => {
       if (!votes.length && !showUnvoted) {
@@ -61,11 +63,11 @@ const HistoryPage = () => {
 
       try {
         if (showUnvoted) {
-          const { options, total } = await getUnvotedOptions(user.id, currentPage, pageSize, searchQuery)
+          const { options, total } = await getUnvotedOptions(user.id, pollId, currentPage, pageSize, searchQuery)
           setUnvotedOptions(options)
           setTotalVotes(total)
         } else {
-          const { votes: newVotes, total } = await getVoteHistory(user.id, currentPage, pageSize, searchQuery, filterSelection)
+          const { votes: newVotes, total } = await getVoteHistory(user.id, pollId, currentPage, pageSize, searchQuery, filterSelection)
           setVotes(newVotes)
           setTotalVotes(total)
         }
@@ -80,41 +82,41 @@ const HistoryPage = () => {
     }
 
     loadData()
-  }, [user, currentPage, searchQuery, filterSelection, showUnvoted])
+  }, [user, pollId, currentPage, searchQuery, filterSelection, showUnvoted])
 
   // Función memoizada para cargar los conteos
   const loadOptionCounts = useCallback(async (forceRefresh = false) => {
-    if (!user) return
+    if (!user || !pollId) return
 
     try {
-      const counts = await getCachedOptionCounts(user.id, forceRefresh)
+      const counts = await getCachedOptionCounts(user.id, pollId, forceRefresh)
       setOptionCounts(counts)
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
     }
-  }, [user])
+  }, [user, pollId])
 
   // Cargar conteos iniciales
   useEffect(() => {
-    if (!user) return
+    if (!user || !pollId) return
     loadOptionCounts()
-  }, [user, loadOptionCounts])
+  }, [user, pollId, loadOptionCounts])
 
   // Actualizar conteos después de votar
   const handleVote = async (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => {
-    if (!user) return
+    if (!user || !pollId) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      await submitVote(user.id, optionId, filter)
+      await submitVote(user.id, optionId, pollId, filter)
 
       // Forzar actualización de conteos
       await loadOptionCounts(true)
 
       // Get updated data
-      const { options, total } = await getUnvotedOptions(user.id, currentPage, pageSize, searchQuery)
+      const { options, total } = await getUnvotedOptions(user.id, pollId, currentPage, pageSize, searchQuery)
       setUnvotedOptions(options)
       setTotalVotes(total)
 
@@ -136,13 +138,13 @@ const HistoryPage = () => {
 
   // Actualizar conteos después de cambiar un voto
   const handleUpdateVote = async (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => {
-    if (!user) return
+    if (!user || !pollId) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      await updateVote(user.id, optionId, newFilter)
+      await updateVote(user.id, optionId, pollId, newFilter)
 
       // Update the vote in the local state
       setVotes(prevVotes =>
@@ -377,8 +379,8 @@ const HistoryPage = () => {
                       getDifficultyText={getDifficultyText}
                     />
                   ) : (
-                    <div className="text-center p-lg">
-                      <p className="text-muted">
+                    <div className="flex flex-col gap-sm justify-center align-center w-100 p-lg">
+                      <p className=" text-center text-muted">
                         {!searchQuery
                           ? "No hay votos en tu listado. Usa el botón de arriba para ir a votar."
                           : "No se encontraron votos que coincidan con tu búsqueda."}
@@ -386,7 +388,7 @@ const HistoryPage = () => {
                       {!searchQuery && (
                         <button
                           className="btn btn-primary mt-4"
-                          onClick={() => navigate('/vote')}
+                          onClick={() => navigate(`/vote?pollId=${pollId}`)}
                         >
                           Ir a votar
                         </button>

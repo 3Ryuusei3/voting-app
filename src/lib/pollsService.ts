@@ -66,14 +66,6 @@ export async function getUserPolls(userId: string): Promise<PollWithPermission[]
           return null
         }
 
-        // Log para debug
-        console.log(`Poll ${poll.id} (${poll.name}):`, {
-          rawStats: statsData[0],
-          voted: Number(statsData[0].voted_count) || 0,
-          total: Number(statsData[0].total_count) || 0,
-          unvoted: Number(statsData[0].total_count - statsData[0].voted_count) || 0
-        })
-
         return {
           id: poll.id,
           title: poll.name,
