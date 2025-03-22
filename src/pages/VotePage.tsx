@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import VotingCard from '../components/VotingCard'
 import OptionStats from '../components/OptionStats'
-import { getUnvotedOptions, submitVote, updateVote } from '../lib/optionService'
-import { getCachedOptionCounts } from '../lib/historyService'
+import { getUnvotedOptions, submitVote, updateVote, getOptionCounts } from '../lib/optionService'
 import type { VoteHistory, Option } from '../types'
 
 const VotePage = () => {
   const { user, isAuthenticated, isCheckingUser } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const pollId = Number(searchParams.get('pollId'))
   const [options, setOptions] = useState<Option[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,32 +26,32 @@ const VotePage = () => {
   const [voteHistory, setVoteHistory] = useState<VoteHistory[]>([])
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0)
 
-  // Redirigir si el usuario no está autenticado
+  // Redirigir si el usuario no está autenticado o si no hay pollId
   useEffect(() => {
-    if (!isAuthenticated && !isCheckingUser && !isLoading && dataLoaded) {
+    if ((!isAuthenticated && !isCheckingUser && !isLoading && dataLoaded) || !pollId) {
       navigate('/')
     }
-  }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded])
+  }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded, pollId])
 
-  const loadOptionCounts = useCallback(async (forceRefresh = false) => {
-    if (!user) return
+  const loadOptionCounts = useCallback(async () => {
+    if (!user || !pollId) return
 
     try {
-      const counts = await getCachedOptionCounts(user.id, forceRefresh)
+      const counts = await getOptionCounts(user.id, pollId)
       setOptionCounts(counts)
     } catch (err) {
       console.error('Error al cargar conteos de palabras:', err)
     }
-  }, [user])
+  }, [user, pollId])
 
   const loadOptions = useCallback(async () => {
-    if (!user) return
+    if (!user || !pollId) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const unvotedOptions = await getUnvotedOptions(user.id, 500)
+      const unvotedOptions = await getUnvotedOptions(user.id, pollId, 500)
       setOptions(unvotedOptions)
 
       // If we didn't get any options, show a message
@@ -64,18 +65,18 @@ const VotePage = () => {
       setIsLoading(false)
       setDataLoaded(true)
     }
-  }, [user])
+  }, [user, pollId])
 
   // Cargar palabras no votadas y conteos
   useEffect(() => {
-    if (user && !dataLoaded) {
+    if (user && !dataLoaded && pollId) {
       loadOptions()
       loadOptionCounts()
     }
-  }, [user, dataLoaded, loadOptions, loadOptionCounts])
+  }, [user, dataLoaded, loadOptions, loadOptionCounts, pollId])
 
   const handleVote = async (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => {
-    if (!user) return
+    if (!user || !pollId) return
 
     setIsLoading(true)
     setError(null)
@@ -87,10 +88,10 @@ const VotePage = () => {
       // Add to history before submitting vote
       setVoteHistory(prev => [...prev, { ...option, filter: filter }])
 
-      await submitVote(user.id, optionId, filter)
+      await submitVote(user.id, optionId, pollId, filter)
 
       // Actualizar conteos forzando refresco del caché
-      await loadOptionCounts(true)
+      await loadOptionCounts()
 
       // Pasar a la siguiente palabra
       setCurrentOptionIndex(prev => prev + 1)
@@ -120,7 +121,7 @@ const VotePage = () => {
       setCurrentOptionIndex(prev => Math.max(0, prev - 1))
 
       // Update counts forzando refresco del caché
-      await loadOptionCounts(true)
+      await loadOptionCounts()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al deshacer el voto'
       setError(errorMessage)
@@ -149,7 +150,7 @@ const VotePage = () => {
       )
 
       // Update counts forzando refresco del caché
-      await loadOptionCounts(true)
+      await loadOptionCounts()
 
       // Pasar a la siguiente palabra
       setCurrentOptionIndex(prev => prev + 1)

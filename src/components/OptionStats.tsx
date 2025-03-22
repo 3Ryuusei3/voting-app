@@ -3,9 +3,6 @@ interface OptionStatsProps {
     voted: number
     unvoted: number
     total: number
-    easyOptions: number
-    difficultOptions: number
-    notExistOptions: number
   }
   showDetailedStats?: boolean
   className?: string
@@ -46,9 +43,6 @@ const OptionStats = ({
       {showDetailedStats && (
         <div className="mt-4">
           <p>Has votado {optionCounts.voted} de {optionCounts.total} palabras totales.</p>
-          <p>Palabras difíciles: {optionCounts.difficultOptions}</p>
-          <p>Palabras fáciles: {optionCounts.easyOptions}</p>
-          <p>Palabras que no existen: {optionCounts.notExistOptions}</p>
         </div>
       )}
     </div>

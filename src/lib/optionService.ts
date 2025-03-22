@@ -4,11 +4,12 @@ import type { Option, Vote } from '../types'
 /**
  * Obtiene palabras que el usuario aún no ha votado en orden alfabético
  */
-export async function getUnvotedOptions(userId: string, limit = 10): Promise<Option[]> {
+export async function getUnvotedOptions(userId: string, pollId: number, limit = 10): Promise<Option[]> {
   try {
     const { data, error } = await supabase
-      .rpc('get_unvoted_options', {
+      .rpc('get_unvoted_options_by_poll_id', {
         p_user_id: userId,
+        p_poll_id: pollId,
         p_page: 1,
         p_page_size: limit,
         p_search_query: ''
@@ -23,7 +24,7 @@ export async function getUnvotedOptions(userId: string, limit = 10): Promise<Opt
       id: item.id,
       option: item.option,
       created_at: item.created_at,
-      poll_id: 1
+      poll_id: pollId
     })) || []
   } catch (err) {
     console.error('Error en getUnvotedOptions:', err)
@@ -34,7 +35,7 @@ export async function getUnvotedOptions(userId: string, limit = 10): Promise<Opt
 /**
  * Obtiene el conteo de palabras votadas y no votadas
  */
-export async function getOptionCounts(userId: string): Promise<{
+export async function getOptionCounts(userId: string, pollId: number): Promise<{
   voted: number,
   unvoted: number,
   total: number,
@@ -44,7 +45,10 @@ export async function getOptionCounts(userId: string): Promise<{
 }> {
   try {
     const { data, error } = await supabase
-      .rpc('get_option_counts', { p_user_id: userId })
+      .rpc('get_option_counts_by_poll_id', {
+        p_user_id: userId,
+        p_poll_id: pollId
+      })
 
     if (error) throw error
 
@@ -66,13 +70,14 @@ export async function getOptionCounts(userId: string): Promise<{
 /**
  * Registra un voto del usuario
  */
-export async function submitVote(userId: string, optionId: number, filter: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
+export async function submitVote(userId: string, optionId: number, pollId: number, filter: 'easy' | 'difficult' | 'not_exist'): Promise<Vote> {
   // Verificar si el usuario ya ha votado esta palabra
   const { data: existingVote } = await supabase
     .from('votes')
     .select('*')
     .eq('user_id', userId)
     .eq('option_id', optionId)
+    .eq('poll_id', pollId)
     .single()
 
   if (existingVote) {
@@ -86,8 +91,8 @@ export async function submitVote(userId: string, optionId: number, filter: 'easy
       {
         user_id: userId,
         option_id: optionId,
+        poll_id: pollId,
         filter: filter,
-        poll_id: 1,
         created_at: new Date().toISOString()
       }
     ])

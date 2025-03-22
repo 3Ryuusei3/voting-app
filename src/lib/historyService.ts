@@ -31,10 +31,12 @@ let optionCountsCache: {
   } | null
   timestamp: number
   userId: string | null
+  pollId: number | null
 } = {
   counts: null,
   timestamp: 0,
-  userId: null
+  userId: null,
+  pollId: null
 }
 
 // Tiempo de expiración del caché (5 minutos)
@@ -43,7 +45,7 @@ const CACHE_EXPIRATION = 5 * 60 * 1000
 /**
  * Obtiene los conteos de opciones con sistema de caché
  */
-export async function getCachedOptionCounts(userId: string, forceRefresh = false) {
+export async function getCachedOptionCounts(userId: string, pollId: number, forceRefresh = false) {
   const now = Date.now()
 
   // Usar caché si está disponible y no ha expirado
@@ -51,6 +53,7 @@ export async function getCachedOptionCounts(userId: string, forceRefresh = false
     !forceRefresh &&
     optionCountsCache.counts &&
     optionCountsCache.userId === userId &&
+    optionCountsCache.pollId === pollId &&
     now - optionCountsCache.timestamp < CACHE_EXPIRATION
   ) {
     return optionCountsCache.counts
@@ -58,7 +61,10 @@ export async function getCachedOptionCounts(userId: string, forceRefresh = false
 
   try {
     const { data, error } = await supabase
-      .rpc('get_option_counts', { p_user_id: userId })
+      .rpc('get_option_counts_by_poll_id', {
+        p_user_id: userId,
+        p_poll_id: pollId
+      })
 
     if (error) throw error
 
@@ -75,7 +81,8 @@ export async function getCachedOptionCounts(userId: string, forceRefresh = false
     optionCountsCache = {
       counts,
       timestamp: now,
-      userId
+      userId,
+      pollId
     }
 
     return counts
@@ -90,6 +97,7 @@ export async function getCachedOptionCounts(userId: string, forceRefresh = false
  */
 export async function getUnvotedOptions(
   userId: string,
+  pollId: number,
   page: number = 1,
   pageSize: number = 10,
   searchQuery: string = ''
@@ -99,8 +107,9 @@ export async function getUnvotedOptions(
 }> {
   try {
     const { data, error } = await supabase
-      .rpc('get_unvoted_options', {
+      .rpc('get_unvoted_options_by_poll_id', {
         p_user_id: userId,
+        p_poll_id: pollId,
         p_search_query: searchQuery,
         p_page: page,
         p_page_size: pageSize
@@ -119,7 +128,7 @@ export async function getUnvotedOptions(
       id: item.id,
       option: item.option,
       created_at: item.created_at,
-      poll_id: 1
+      poll_id: pollId
     }))
 
     return {
@@ -137,6 +146,7 @@ export async function getUnvotedOptions(
  */
 export async function getVoteHistory(
   userId: string,
+  pollId: number,
   page: number = 1,
   pageSize: number = 10,
   searchQuery: string = '',
@@ -147,8 +157,9 @@ export async function getVoteHistory(
 }> {
   try {
     const { data, error } = await supabase
-      .rpc('get_vote_history', {
+      .rpc('get_vote_history_by_poll_id', {
         p_user_id: userId,
+        p_poll_id: pollId,
         p_page: page,
         p_page_size: pageSize,
         p_search_query: searchQuery,
@@ -167,12 +178,12 @@ export async function getVoteHistory(
       option_id: row.option_id,
       filter: row.filter,
       created_at: row.created_at,
-      poll_id: 1,
+      poll_id: pollId,
       option: {
         id: row.option_id,
         option: row.option,
         created_at: row.created_at,
-        poll_id: 1
+        poll_id: pollId
       }
     })) as (Vote & { option: Option })[]
 
@@ -192,13 +203,15 @@ export async function getVoteHistory(
 export async function updateVote(
   userId: string,
   optionId: number,
+  pollId: number,
   filter: 'easy' | 'difficult' | 'not_exist'
 ): Promise<Vote> {
   try {
     const { data, error } = await supabase
-      .rpc('update_vote', {
+      .rpc('update_vote_by_poll_id', {
         p_user_id: userId,
         p_option_id: optionId,
+        p_poll_id: pollId,
         p_filter: filter
       }) as { data: Vote[] | null, error: Error | null }
 

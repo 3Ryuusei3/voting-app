@@ -1,5 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import logo from '../assets/woting-logo.svg';
 import offIcon from '../assets/off-icon.svg';
 import listIcon from '../assets/list-icon.svg';
@@ -7,6 +7,8 @@ import voteIcon from '../assets/vote-icon.svg';
 import googleIcon from '../assets/google-icon.svg';
 const Header = () => {
   const { user, isLoading, signInWithGoogle, signOut } = useAuth();
+  const [searchParams] = useSearchParams()
+  const pollId = Number(searchParams.get('pollId'))
 
   const handleAuth = () => {
     if (user) {
@@ -38,14 +40,18 @@ const Header = () => {
             </button>
           ) : (
             <>
-              <Link to="/vote" className="btn btn-primary flex">
-                <span>Votar</span>
-                <img src={voteIcon} alt="Logo" width={28} height={28} />
-              </Link>
-              <Link to="/history" className="btn btn-gray flex">
-                <span>Listado</span>
-                <img src={listIcon} alt="Logo" width={28} height={28} />
-              </Link>
+              {pollId ? (
+                <>
+                  <Link to={`/vote?pollId=${pollId}`} className="btn btn-primary flex">
+                    <span>Votar</span>
+                    <img src={voteIcon} alt="Logo" width={28} height={28} />
+                  </Link>
+                  <Link to={`/history?pollId=${pollId}`} className="btn btn-gray flex">
+                    <span>Listado</span>
+                    <img src={listIcon} alt="Logo" width={28} height={28} />
+                  </Link>
+                </>
+              ) : null}
               <Link to="/" className="btn btn-error flex" onClick={handleAuth}>
                 <span>Cerrar sesión</span>
                 <img src={offIcon} alt="Logo" width={28} height={28} />
