@@ -68,7 +68,7 @@ const VotePage = () => {
     setError(null)
 
     try {
-      const unvotedOptions = await getUnvotedOptions(user.id, pollId, 500)
+      const { options: unvotedOptions } = await getUnvotedOptions(user.id, pollId, 1, 500)
       setOptions(unvotedOptions)
 
       // If we didn't get any options, show a message

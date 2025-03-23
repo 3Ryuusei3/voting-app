@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getCachedOptionCounts } from './optionService'
 
 export interface PollWithPermission {
   id: number
@@ -55,16 +56,7 @@ export async function getUserPolls(userId: string): Promise<PollWithPermission[]
         if (!poll) return null
 
         // Obtener estadísticas para esta encuesta específica
-        const { data: statsData, error: statsError } = await supabase
-          .rpc('get_option_counts_by_poll_id', {
-            p_user_id: userId,
-            p_poll_id: poll.id
-          })
-
-        if (statsError) {
-          console.error('Error al obtener estadísticas:', statsError)
-          return null
-        }
+        const counts = await getCachedOptionCounts(userId, poll.id)
 
         return {
           id: poll.id,
@@ -73,9 +65,9 @@ export async function getUserPolls(userId: string): Promise<PollWithPermission[]
           can_vote: permission.can_vote,
           can_view: permission.can_view,
           optionCounts: {
-            voted: Number(statsData[0].voted_count) || 0,
-            total: Number(statsData[0].total_count) || 0,
-            unvoted: Number(statsData[0].total_count - statsData[0].voted_count) || 0
+            voted: counts.voted,
+            total: counts.total,
+            unvoted: counts.unvoted
           }
         }
       })

@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { Option, Vote } from '../types'
+import { getCachedOptionCounts, getUnvotedOptions } from './optionService'
 
 interface VoteHistoryRow {
   id: number
@@ -12,134 +13,7 @@ interface VoteHistoryRow {
   poll_id?: number
 }
 
-interface UnvotedOptionResult {
-  id: number
-  option: string
-  created_at: string
-  total: number
-}
-
-// Cache para los conteos
-let optionCountsCache: {
-  counts: {
-    voted: number
-    unvoted: number
-    total: number
-    easyOptions: number
-    difficultOptions: number
-    notExistOptions: number
-  } | null
-  timestamp: number
-  userId: string | null
-  pollId: number | null
-} = {
-  counts: null,
-  timestamp: 0,
-  userId: null,
-  pollId: null
-}
-
-// Tiempo de expiración del caché (5 minutos)
-const CACHE_EXPIRATION = 5 * 60 * 1000
-
-/**
- * Obtiene los conteos de opciones con sistema de caché
- */
-export async function getCachedOptionCounts(userId: string, pollId: number, forceRefresh = false) {
-  const now = Date.now()
-
-  // Usar caché si está disponible y no ha expirado
-  if (
-    !forceRefresh &&
-    optionCountsCache.counts &&
-    optionCountsCache.userId === userId &&
-    optionCountsCache.pollId === pollId &&
-    now - optionCountsCache.timestamp < CACHE_EXPIRATION
-  ) {
-    return optionCountsCache.counts
-  }
-
-  try {
-    const { data, error } = await supabase
-      .rpc('get_option_counts_by_poll_id', {
-        p_user_id: userId,
-        p_poll_id: pollId
-      })
-
-    if (error) throw error
-
-    const counts = {
-      voted: Number(data[0].voted_count) || 0,
-      unvoted: Number(data[0].total_count - data[0].voted_count) || 0,
-      total: Number(data[0].total_count) || 0,
-      easyOptions: Number(data[0].easy_count) || 0,
-      difficultOptions: Number(data[0].difficult_count) || 0,
-      notExistOptions: Number(data[0].not_exist_count) || 0
-    }
-
-    // Actualizar caché
-    optionCountsCache = {
-      counts,
-      timestamp: now,
-      userId,
-      pollId
-    }
-
-    return counts
-  } catch (error) {
-    console.error('Error al obtener conteos:', error)
-    throw error
-  }
-}
-
-/**
- * Obtiene palabras que el usuario aún no ha votado
- */
-export async function getUnvotedOptions(
-  userId: string,
-  pollId: number,
-  page: number = 1,
-  pageSize: number = 10,
-  searchQuery: string = ''
-): Promise<{
-  options: Option[]
-  total: number
-}> {
-  try {
-    const { data, error } = await supabase
-      .rpc('get_unvoted_options_by_poll_id', {
-        p_user_id: userId,
-        p_poll_id: pollId,
-        p_search_query: searchQuery,
-        p_page: page,
-        p_page_size: pageSize
-      }) as { data: UnvotedOptionResult[] | null, error: Error | null }
-
-    if (error) {
-      console.error('Error al obtener palabras no votadas:', error)
-      throw error
-    }
-
-    if (!data || data.length === 0) {
-      return { options: [], total: 0 }
-    }
-
-    const options: Option[] = data.map(item => ({
-      id: item.id,
-      option: item.option,
-      created_at: item.created_at,
-      poll_id: pollId
-    }))
-
-    return {
-      options,
-      total: Number(data[0]?.total) || 0
-    }
-  } catch (err) {
-    console.error('Error en getUnvotedOptions:', err)
-    throw err
-  }
-}
+export { getCachedOptionCounts, getUnvotedOptions }
 
 /**
  * Obtiene el historial de votos del usuario con paginación
