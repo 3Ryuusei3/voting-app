@@ -72,6 +72,27 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
     }
   }, [isAuthenticated, isCheckingUser, navigate, isLoading, dataLoaded, pollId])
 
+  const updateLocalCounts = useCallback((action: 'add' | 'remove' | 'update', filter: 'easy' | 'difficult' | 'not_exist', oldFilter?: 'easy' | 'difficult' | 'not_exist') => {
+    setOptionCounts(prev => {
+      const newCounts = { ...prev }
+
+      if (action === 'add') {
+        newCounts.voted++
+        newCounts.unvoted--
+        newCounts[`${filter === 'not_exist' ? 'notExist' : filter}Options`]++
+      } else if (action === 'remove') {
+        newCounts.voted--
+        newCounts.unvoted++
+        newCounts[`${filter === 'not_exist' ? 'notExist' : filter}Options`]--
+      } else if (action === 'update' && oldFilter) {
+        newCounts[`${oldFilter === 'not_exist' ? 'notExist' : oldFilter}Options`]--
+        newCounts[`${filter === 'not_exist' ? 'notExist' : filter}Options`]++
+      }
+
+      return newCounts
+    })
+  }, [])
+
   const loadOptionCounts = useCallback(async () => {
     if (!user || !pollId) return
 
@@ -93,7 +114,6 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
       const { options: unvotedOptions } = await getUnvotedOptions(user.id, pollId, 1, 500)
       setOptions(unvotedOptions)
 
-      // If we didn't get any options, show a message
       if (unvotedOptions.length === 0) {
         setError('No hay más palabras disponibles para votar en este momento. Es posible que hayas votado todas las palabras disponibles o que estemos experimentando problemas técnicos.')
       }
@@ -106,7 +126,7 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
     }
   }, [user, pollId])
 
-  // Cargar palabras no votadas y conteos
+  // Cargar palabras no votadas y conteos iniciales
   useEffect(() => {
     if (user && !dataLoaded && pollId) {
       loadOptions()
@@ -129,8 +149,8 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
 
       await submitVote(user.id, optionId, pollId, filter)
 
-      // Actualizar conteos forzando refresco del caché
-      await loadOptionCounts()
+      // Update local counts
+      updateLocalCounts('add', filter)
 
       // Pasar a la siguiente palabra
       setCurrentOptionIndex(prev => prev + 1)
@@ -156,11 +176,14 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
     setError(null)
 
     try {
+      // Get the last vote from history
+      const lastVote = voteHistory[voteHistory.length - 1]
+
+      // Update local counts
+      updateLocalCounts('remove', lastVote.filter)
+
       // Volver a la palabra anterior sin modificar el listado
       setCurrentOptionIndex(prev => Math.max(0, prev - 1))
-
-      // Update counts forzando refresco del caché
-      await loadOptionCounts()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al deshacer el voto'
       setError(errorMessage)
@@ -177,6 +200,10 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
     setError(null)
 
     try {
+      // Find the old vote in history
+      const oldVote = voteHistory.find(vote => vote.id === optionId)
+      if (!oldVote) throw new Error('Vote not found in history')
+
       await updateVote(user.id, optionId, newFilter)
 
       // Update the vote in history
@@ -188,8 +215,8 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
         )
       )
 
-      // Update counts forzando refresco del caché
-      await loadOptionCounts()
+      // Update local counts
+      updateLocalCounts('update', newFilter, oldVote.filter)
 
       // Pasar a la siguiente palabra
       setCurrentOptionIndex(prev => prev + 1)
