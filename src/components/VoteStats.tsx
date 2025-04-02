@@ -1,4 +1,3 @@
-import React from 'react'
 import OptionStats from './OptionStats'
 
 interface VoteStatsProps {
@@ -12,7 +11,7 @@ interface VoteStatsProps {
   }
 }
 
-export const VoteStats: React.FC<VoteStatsProps> = ({ optionCounts }) => {
+export const VoteStats = ({ optionCounts }: VoteStatsProps) => {
   return (
     <div className="text-center mb-4 w-100 mw-500">
       <div className="mx-auto mb-4">

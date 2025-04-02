@@ -19,6 +19,7 @@ interface VoteState {
   }
   dataLoaded: boolean
   voteHistory: VoteHistory[]
+  previousVotes: VoteHistory[]
   currentOptionIndex: number
   pollUrl: string | null
 }
@@ -46,6 +47,7 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
   })
   const [dataLoaded, setDataLoaded] = useState(false)
   const [voteHistory, setVoteHistory] = useState<VoteHistory[]>([])
+  const [previousVotes, setPreviousVotes] = useState<VoteHistory[]>([])
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0)
   const [pollUrl, setPollUrl] = useState<string | null>(null)
 
@@ -145,7 +147,23 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
       if (!option) throw new Error('Option not found')
 
       // Add to history before submitting vote
-      setVoteHistory(prev => [...prev, { ...option, filter: filter }])
+      const newVote = { ...option, filter: filter }
+      setVoteHistory(prev => [...prev, newVote])
+
+      // Also add to previous votes array
+      setPreviousVotes(prev => {
+        // Check if this option is already in previousVotes
+        const existingIndex = prev.findIndex(vote => vote.id === optionId)
+        if (existingIndex >= 0) {
+          // Update the existing vote
+          const updated = [...prev]
+          updated[existingIndex] = newVote
+          return updated
+        } else {
+          // Add as a new vote
+          return [...prev, newVote]
+        }
+      })
 
       await submitVote(user.id, optionId, pollId, filter)
 
@@ -182,6 +200,9 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
       // Update local counts
       updateLocalCounts('remove', lastVote.filter)
 
+      // Remove the vote from history (but keep in previousVotes)
+      setVoteHistory(prev => prev.slice(0, -1))
+
       // Volver a la palabra anterior sin modificar el listado
       setCurrentOptionIndex(prev => Math.max(0, prev - 1))
     } catch (err) {
@@ -207,10 +228,20 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
       await updateVote(user.id, optionId, newFilter)
 
       // Update the vote in history
+      const updatedVote = { ...oldVote, filter: newFilter }
       setVoteHistory(prev =>
         prev.map(vote =>
           vote.id === optionId
-            ? { ...vote, filter: newFilter }
+            ? updatedVote
+            : vote
+        )
+      )
+
+      // Also update in previousVotes
+      setPreviousVotes(prev =>
+        prev.map(vote =>
+          vote.id === optionId
+            ? updatedVote
             : vote
         )
       )
@@ -242,6 +273,7 @@ export const useVoteData = (pollId: number): [VoteState, VoteActions] => {
     optionCounts,
     dataLoaded,
     voteHistory,
+    previousVotes,
     currentOptionIndex,
     pollUrl
   }

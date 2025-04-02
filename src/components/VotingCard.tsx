@@ -5,14 +5,15 @@ import undoIcon from '../assets/undo-icon.svg'
 interface VotingCardProps {
   option: Option
   onVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
+  onUpdateVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
   isLoading: boolean
   voteHistory?: VoteHistory[]
-  onUpdateVote: (optionId: number, newFilter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
+  previousVotes?: VoteHistory[]
   handleUndo: () => Promise<void>
   pollUrl: string | null
 }
 
-const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, handleUndo, pollUrl }: VotingCardProps) => {
+const VotingCard = ({ option, onVote, onUpdateVote, isLoading, voteHistory, previousVotes, handleUndo, pollUrl }: VotingCardProps) => {
   const [localLoading, setLocalLoading] = useState(false)
 
   const handleVote = async (filter: 'easy' | 'difficult' | 'not_exist') => {
@@ -20,9 +21,14 @@ const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, hand
 
     setLocalLoading(true)
     try {
-      if (voteHistory && voteHistory.some(vote => vote.id === option.id)) {
+      // Check if this option was previously voted
+      const hasPreviousVote = voteHistory?.some(vote => vote.id === option.id)
+
+      if (hasPreviousVote) {
+        // If it was previously voted, update the vote
         await onUpdateVote(option.id, filter)
       } else {
+        // If it wasn't previously voted, create a new vote
         await onVote(option.id, filter)
       }
     } catch (error) {
@@ -33,7 +39,8 @@ const VotingCard = ({ option, onVote, isLoading, voteHistory, onUpdateVote, hand
   }
 
   const checkPreviousVote = (filter: 'easy' | 'difficult' | 'not_exist') => {
-    return voteHistory?.some(vote => vote.id === option.id && vote.filter === filter)
+    const inPreviousVotes = previousVotes?.some(vote => vote.id === option.id && vote.filter === filter)
+    return inPreviousVotes
   }
 
   const showUndoButton = voteHistory && voteHistory.length > 0 && voteHistory[0].id !== option.id

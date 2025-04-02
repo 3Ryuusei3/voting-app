@@ -35,9 +35,10 @@ const VotePage = () => {
         <VoteContainer
           option={state.options[state.currentOptionIndex]}
           onVote={actions.handleVote}
+          onUpdateVote={actions.handleUpdateVote}
           isLoading={state.isLoading}
           voteHistory={state.voteHistory}
-          onUpdateVote={actions.handleUpdateVote}
+          previousVotes={state.previousVotes}
           handleUndo={actions.handleUndo}
           pollUrl={state.pollUrl}
           optionCounts={state.optionCounts}

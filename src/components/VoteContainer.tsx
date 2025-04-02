@@ -1,4 +1,3 @@
-import React from 'react'
 import VotingCard from './VotingCard'
 import { VoteStats } from './VoteStats'
 import type { Option, VoteHistory } from '../types'
@@ -6,9 +5,10 @@ import type { Option, VoteHistory } from '../types'
 interface VoteContainerProps {
   option: Option
   onVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
+  onUpdateVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
   isLoading: boolean
   voteHistory: VoteHistory[]
-  onUpdateVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => Promise<void>
+  previousVotes: VoteHistory[]
   handleUndo: () => Promise<void>
   pollUrl: string | null
   optionCounts: {
@@ -21,24 +21,26 @@ interface VoteContainerProps {
   }
 }
 
-export const VoteContainer: React.FC<VoteContainerProps> = ({
+export const VoteContainer = ({
   option,
   onVote,
+  onUpdateVote,
   isLoading,
   voteHistory,
-  onUpdateVote,
+  previousVotes,
   handleUndo,
   pollUrl,
   optionCounts
-}) => {
+}: VoteContainerProps) => {
   return (
     <div className="flex flex-col align-center gap-md w-100">
       <VotingCard
         option={option}
         onVote={onVote}
+        onUpdateVote={onUpdateVote}
         isLoading={isLoading}
         voteHistory={voteHistory}
-        onUpdateVote={onUpdateVote}
+        previousVotes={previousVotes}
         handleUndo={handleUndo}
         pollUrl={pollUrl}
       />
