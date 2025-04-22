@@ -74,7 +74,7 @@ export const VotesTable = ({
                   <strong>D</strong>
                 </button>
                 <button
-                  className={`btn btn-rg btn-tertiary ${getDifficultyText(vote.filter) === 'No existe' ? 'prev-vote' : ''}`}
+                  className={`btn btn-rg btn-tertiary ${getDifficultyText(vote.filter) === 'Eliminadas' ? 'prev-vote' : ''}`}
                   onClick={() => onUpdateVote(vote.option_id, 'not_exist')}
                   disabled={isLoading}
                 >

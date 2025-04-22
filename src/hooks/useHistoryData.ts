@@ -225,7 +225,7 @@ export const useHistoryData = (pollId: number): [HistoryState, HistoryActions] =
       case 'difficult':
         return 'Difícil'
       case 'not_exist':
-        return 'No existe'
+        return 'Eliminadas'
       default:
         return filter
     }

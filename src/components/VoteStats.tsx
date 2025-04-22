@@ -23,7 +23,7 @@ export const VoteStats = ({ optionCounts }: VoteStatsProps) => {
             <span className="text-small">Fáciles: {optionCounts.easyOptions}</span>
           </div>
           <div className="flex items-center gap-sm">
-            <span className="text-small">No existen: {optionCounts.notExistOptions}</span>
+            <span className="text-small">Eliminadas: {optionCounts.notExistOptions}</span>
           </div>
         </div>
 
