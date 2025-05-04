@@ -163,6 +163,10 @@ table {
   }
 }
 
+.rel {
+  position: relative;
+}
+
 .w-100 {
   width: 100%;
 }
@@ -1017,4 +1021,32 @@ table {
   border-top-color: var(--clr-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+
+// Key help
+@media screen and (max-width: 768px) {
+  .desktop-help-key {
+    display: none;
+  }
+}
+
+.desktop-help-key {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 0.5rem;
+  color: var(--clr-white);
+  border: 2px solid var(--clr-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.3rem;
+  background-color: var(--clr-surface-variant);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+
+  &.title {
+    bottom: 50%;
+    right: -30px;
+    transform: translateY(50%);
+  }
 }
