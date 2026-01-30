@@ -1,10 +1,11 @@
 import { useAuthStore } from '../store/authStore'
 
 export const useAuth = () => {
-  const { user, isLoading, isCheckingUser, error, signInWithGoogle, signOut } = useAuthStore()
+  const { user, userRole, isLoading, isCheckingUser, error, signInWithGoogle, signOut } = useAuthStore()
 
   return {
     user,
+    userRole,
     isLoading,
     isCheckingUser,
     error,

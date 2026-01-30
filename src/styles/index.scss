@@ -124,6 +124,32 @@ table {
   }
 }
 
+select {
+  position: relative;
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--clr-text);
+  background-color: var(--clr-surface-variant);
+  border: 2px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  appearance: none;
+}
+
+.select-box {
+  position: relative;
+
+  img {
+    position: absolute;
+    right: var(--space-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: var(--space-lg);
+    height: var(--space-lg);
+  }
+}
+
+
 // Utility Classes
 
 // Layout
@@ -493,6 +519,11 @@ table {
 
   &.prev-vote {
     border: 2px solid var(--clr-white);
+  }
+
+  &-close {
+    background-color: transparent;
+    color: white;
   }
 }
 
@@ -1048,5 +1079,34 @@ table {
     bottom: 50%;
     right: -30px;
     transform: translateY(50%);
+  }
+}
+
+// Modal
+.fixed-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+
+  input, select {
+    padding: var(--space-sm);
+    font-size: var(--fs-medium);
+
+    &::placeholder {
+      font-size: var(--fs-medium);
+    }
+  }
+
+  button {
+    font-size: var(--fs-medium);
+    font-weight: var(--fw-bold);
   }
 }

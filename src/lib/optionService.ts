@@ -233,3 +233,27 @@ export async function getVoteHistory(
     throw error
   }
 }
+
+/**
+ * Añade una nueva opción a una encuesta
+ */
+export async function addOption(pollId: number, optionText: string): Promise<Option> {
+  const { data, error } = await supabase
+    .from('options')
+    .insert([
+      {
+        poll_id: pollId,
+        option: optionText,
+        created_at: new Date().toISOString()
+      }
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error al añadir opción:', error)
+    throw error
+  }
+
+  return data
+}

@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js';
 
 interface AuthState {
   user: User | null;
+  userRole: number | null;
   isLoading: boolean;
   isCheckingUser: boolean;
   error: string | null;
@@ -14,6 +15,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  userRole: null,
   isLoading: false,
   isCheckingUser: false,
   error: null,
@@ -42,9 +44,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true, error: null });
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      set({ user: null });
+      set({ user: null, userRole: null });
     } catch (error) {
-      console.error('Sign out error:', error);
       set({ error: (error as Error).message });
     } finally {
       set({ isLoading: false });
@@ -63,16 +64,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const currentUser = get().user;
       const newUser = data.user;
 
-      if (
-        (currentUser === null && newUser !== null) ||
+      const userChanged = (currentUser === null && newUser !== null) ||
         (currentUser !== null && newUser === null) ||
-        (currentUser?.id !== newUser?.id)
-      ) {
-        set({ user: newUser });
+        (currentUser?.id !== newUser?.id);
+
+      if (userChanged || (newUser !== null && get().userRole === null)) {
+        if (userChanged) {
+          set({ user: newUser });
+        }
+
+        if (newUser) {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', newUser.id)
+            .single();
+
+          if (userError) {
+            set({ userRole: null });
+          } else if (userData) {
+            const role = userData.role || userData.rol || userData.user_role || userData.role_id;
+            set({ userRole: role ? Number(role) : null });
+          } else {
+            set({ userRole: null });
+          }
+        } else {
+          set({ userRole: null });
+        }
       }
     } catch (error) {
-      console.error('Auth error:', error);
-      set({ error: (error as Error).message, user: null });
+      set({ error: (error as Error).message, user: null, userRole: null });
     } finally {
       set({ isCheckingUser: false });
     }
