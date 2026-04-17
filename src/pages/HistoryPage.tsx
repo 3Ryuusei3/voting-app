@@ -33,7 +33,8 @@ const HistoryPage = () => {
   }
 
   // Calculate showClearButton
-  const showClearButton = state.searchInput.length > 0 || state.filterSelection !== 'all'
+  const showClearButton =
+    state.searchInput.length > 0 || state.filterSelection !== 'all' || state.exactWordMatch
 
   return (
     <div className="container">
@@ -53,6 +54,7 @@ const HistoryPage = () => {
           filterSelection={state.filterSelection}
           showFilters={state.showFilters}
           showClearButton={showClearButton}
+          exactWordMatch={state.exactWordMatch}
           onUpdateVote={actions.handleUpdateVote}
           onVote={actions.handleVote}
           onToggleUnvoted={actions.setShowUnvoted}
@@ -61,6 +63,7 @@ const HistoryPage = () => {
           onKeyPress={actions.handleKeyPress}
           onFilterChange={actions.handleDifficultyFilter}
           onClearFilters={actions.handleClearFilters}
+          onToggleExactWordMatch={actions.handleToggleExactWordMatch}
           onToggleFilters={actions.handleShowFilters}
           getDifficultyText={actions.getDifficultyText}
           getCompletionPercentage={actions.getCompletionPercentage}

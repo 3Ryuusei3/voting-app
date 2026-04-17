@@ -31,6 +31,7 @@ interface HistoryCardProps {
   filterSelection: DifficultyFilter
   showFilters: boolean
   showClearButton: boolean
+  exactWordMatch: boolean
 
   onUpdateVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => void
   onVote: (optionId: number, filter: 'easy' | 'difficult' | 'not_exist') => void
@@ -40,6 +41,7 @@ interface HistoryCardProps {
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void
   onFilterChange: (filter: DifficultyFilter) => void
   onClearFilters: () => void
+  onToggleExactWordMatch: () => void
   onToggleFilters: () => void
   getDifficultyText: (filter: 'easy' | 'difficult' | 'not_exist') => string
   getCompletionPercentage: () => string | number
@@ -60,6 +62,7 @@ export const HistoryCard = ({
   filterSelection,
   showFilters,
   showClearButton,
+  exactWordMatch,
   onUpdateVote,
   onVote,
   onToggleUnvoted,
@@ -68,6 +71,7 @@ export const HistoryCard = ({
   onKeyPress,
   onFilterChange,
   onClearFilters,
+  onToggleExactWordMatch,
   onToggleFilters,
   getDifficultyText,
   getCompletionPercentage
@@ -93,6 +97,8 @@ export const HistoryCard = ({
           showUnvoted={showUnvoted}
           onClearFilters={onClearFilters}
           showClearButton={showClearButton}
+          exactWordMatch={exactWordMatch}
+          onToggleExactWordMatch={onToggleExactWordMatch}
         />
 
         <HistoryTabs

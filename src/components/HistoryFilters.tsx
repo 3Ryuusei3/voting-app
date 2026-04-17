@@ -15,6 +15,8 @@ interface HistoryFiltersProps {
   showUnvoted: boolean
   onClearFilters: () => void
   showClearButton: boolean
+  exactWordMatch: boolean
+  onToggleExactWordMatch: () => void
 }
 
 export const HistoryFilters = ({
@@ -28,7 +30,9 @@ export const HistoryFilters = ({
   onFilterChange,
   showUnvoted,
   onClearFilters,
-  showClearButton
+  showClearButton,
+  exactWordMatch,
+  onToggleExactWordMatch
 }: HistoryFiltersProps) => {
   return (
     <div className={`filter-section ${showFilters ? '' : 'hidden'} flex gap-xs justify-center align-center bp-sm`}>
@@ -42,6 +46,8 @@ export const HistoryFilters = ({
         placeholder="Buscar palabras..."
         onClearFilters={onClearFilters}
         showClearButton={showClearButton}
+        exactWordMatch={exactWordMatch}
+        onToggleExactWordMatch={onToggleExactWordMatch}
       />
       <div className="flex gap-2xs">
         {!showUnvoted && (

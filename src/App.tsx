@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth'
 import AuthProvider from './context/AuthProvider'
 import VotePage from './pages/VotePage'
 import HistoryPage from './pages/HistoryPage'
+import AdminPage from './pages/AdminPage'
 import Auth from './components/Auth'
 import Header from './components/Header'
 import AuthenticatedContent from './components/WelcomeCard'
@@ -18,6 +19,7 @@ function App() {
           <Routes>
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/vote" element={<VotePage />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/" element={
               <main className="container">
                 {!user ? <Auth /> : <AuthenticatedContent />}

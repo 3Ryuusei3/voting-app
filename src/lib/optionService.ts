@@ -82,20 +82,26 @@ export async function getUnvotedOptions(
   pollId: number,
   page: number = 1,
   pageSize: number = 10,
-  searchQuery: string = ''
+  searchQuery: string = '',
+  exactWordMatch: boolean = false
 ): Promise<{
   options: Option[]
   total: number
 }> {
   try {
+    const rpcArgs: Record<string, string | number | boolean> = {
+      p_user_id: userId,
+      p_poll_id: pollId,
+      p_page: page,
+      p_page_size: pageSize,
+      p_search_query: searchQuery
+    }
+    if (exactWordMatch) {
+      rpcArgs.p_exact_match = true
+    }
+
     const { data, error } = await supabase
-      .rpc('get_unvoted_options_by_poll_id', {
-        p_user_id: userId,
-        p_poll_id: pollId,
-        p_page: page,
-        p_page_size: pageSize,
-        p_search_query: searchQuery
-      }) as { data: { id: number; option: string; created_at: string; total: number }[] | null, error: Error | null }
+      .rpc('get_unvoted_options_by_poll_id', rpcArgs) as { data: { id: number; option: string; created_at: string; total: number }[] | null, error: Error | null }
 
     if (error) {
       console.error('Error al obtener palabras no votadas:', error)
