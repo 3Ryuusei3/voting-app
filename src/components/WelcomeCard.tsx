@@ -3,11 +3,28 @@ import { useAuth } from '../hooks/useAuth'
 import { Link } from 'react-router-dom'
 import { getUserPolls, type PollWithPermission } from '../lib/pollsService'
 import OptionStats from './OptionStats'
+import AddTermModal from './AddTermModal'
+
+const isSuperadminRole = (role: number | null) => role === 1 || role === Number('1')
 
 const AuthenticatedContent = () => {
-  const { user } = useAuth()
+  const { user, userRole } = useAuth()
   const [polls, setPolls] = useState<PollWithPermission[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isAddTermOpen, setIsAddTermOpen] = useState(false)
+  const [addTermPollId, setAddTermPollId] = useState<number | undefined>(undefined)
+
+  const isSuperadmin = isSuperadminRole(userRole)
+
+  const openAddTermForPoll = (pollId: number) => {
+    setAddTermPollId(pollId)
+    setIsAddTermOpen(true)
+  }
+
+  const closeAddTermModal = () => {
+    setIsAddTermOpen(false)
+    setAddTermPollId(undefined)
+  }
 
   useEffect(() => {
     if (user) {
@@ -56,13 +73,31 @@ const AuthenticatedContent = () => {
                           showDetailedStats={false}
                           className="mt-4"
                         />
-                        <div className="flex gap-sm bp-sm">
-                          <Link to={`/history?pollId=${poll.id}`} className="btn btn-xs btn-secondary w-100">
-                            Ver listado de votos
-                          </Link>
-                          <Link to={`/vote?pollId=${poll.id}`} className="btn btn-xs btn-primary w-100">
-                            {poll.optionCounts.unvoted > 0 ? 'Comenzar a votar' : 'Ver estadísticas'}
-                          </Link>
+                        <div className="flex flex-col gap-sm">
+                          <div className="flex gap-sm bp-sm">
+                            <Link to={`/history?pollId=${poll.id}`} className="btn btn-xs btn-secondary w-100">
+                              Ver listado de votos
+                            </Link>
+                            {poll.optionCounts.unvoted > 0 && (
+                              <Link to={`/vote?pollId=${poll.id}`} className="btn btn-xs btn-primary w-100">
+                                Comenzar a votar
+                              </Link>
+                            )}
+                          </div>
+                          {isSuperadmin && (
+                            <div className="flex gap-sm bp-sm">
+                              <button
+                                type="button"
+                                className="btn btn-xs btn-primary w-100"
+                                onClick={() => openAddTermForPoll(poll.id)}
+                              >
+                                Nueva palabra
+                              </button>
+                              <Link to={`/admin?pollId=${poll.id}`} className="btn btn-xs btn-secondary w-100">
+                                Listado
+                              </Link>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -74,6 +109,14 @@ const AuthenticatedContent = () => {
         )}
         <p className="text-muted text-small text-right">© Manuel Atance 2025</p>
       </div>
+
+      {isSuperadmin && (
+        <AddTermModal
+          isOpen={isAddTermOpen}
+          onClose={closeAddTermModal}
+          initialPollId={addTermPollId}
+        />
+      )}
     </div>
   )
 }
